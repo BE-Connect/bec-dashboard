@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Black Editors Connect · Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --espresso:  #1E0F05;
+      --bark:      #3A200E;
+      --walnut:    #6B3C1E;
+      --tan:       #C4A07A;
+      --sand:      #E8D8C0;
+      --cream:     #F7F3ED;
+      --offwhite:  #FDFAF6;
+      --border:    #E0D3C0;
+      --text:      #1E0F05;
+      --muted:     #8A7060;
+      --card:      #FDFAF6;
+      --sidebar-w: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ══ SIDEBAR ══════════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--espresso);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .sidebar-brand {
+      padding: 36px 28px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .sidebar-brand .eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--tan);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .sidebar-brand .brand-name {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 900;
+      font-size: 1.25rem;
+      color: var(--offwhite);
+      line-height: 1.2;
+    }
+    .sidebar-brand .brand-name em {
+      font-style: normal;
+      color: var(--tan);
+      font-weight: 300;
+    }
+    .sidebar-brand .subbrand {
+      font-family: 'DM Sans', sans-serif;
+      font-style: normal;
+      font-size: 0.82rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.4);
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .sidebar-nav {
+      padding: 22px 0;
+      flex: 1;
+    }
+    .nav-label {
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+      padding: 14px 28px 6px;
+      font-weight: 500;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 28px;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: all 0.18s;
+      text-decoration: none;
+      background: none;
+      border-right: none;
+      border-top: none;
+      border-bottom: none;
+      width: 100%;
+      text-align: left;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .nav-item:hover { color: var(--offwhite); background: rgba(255,255,255,0.04); }
+    .nav-item.active {
+      color: var(--offwhite);
+      border-left-color: var(--tan);
+      background: rgba(196,160,122,0.10);
+    }
+    .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 20px 28px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .founder-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .founder-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--walnut), var(--tan));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .founder-name { font-size: 0.82rem; color: rgba(255,255,255,0.6); font-weight: 500; }
+    .founder-role { font-size: 0.7rem; color: rgba(255,255,255,0.3); }
+
+    /* ══ MAIN ══════════════════════════════════════════ */
+    .main-wrap {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══ TOP HEADER ══ */
+    .top-header {
+      background: var(--offwhite);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 52px 36px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .top-header-left { flex: 1; }
+    .top-header-date {
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .top-header-date .date-day {
+      font-family: 'DM Sans', sans-serif;
+      font-style: normal;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--tan);
+      display: block;
+    }
+    .top-header-date .date-full {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      color: var(--espresso);
+      line-height: 1.1;
+      display: block;
+    }
+    .top-header-date .date-year {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-top: 4px;
+    }
+    .top-header .eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .top-header h1 {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 900;
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      line-height: 1.0;
+      color: var(--espresso);
+      letter-spacing: -1px;
+    }
+    .top-header h1 em {
+      font-style: normal;
+      color: var(--walnut);
+      font-weight: 300;
+    }
+    .top-header .sub {
+      font-family: 'DM Sans', sans-serif;
+      font-style: normal;
+      font-size: 1.05rem;
+      font-weight: 300;
+      color: var(--muted);
+      margin-top: 8px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+    .date-block {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .date-block .day-name {
+      font-family: 'DM Sans', sans-serif;
+      font-style: italic;
+      font-size: 1.1rem;
+      color: var(--tan);
+    }
+    .date-block .date-num {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--espresso);
+    }
+    .stat-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+    .stat-chip {
+      background: var(--espresso);
+      color: var(--cream);
+      border-radius: 10px;
+      padding: 10px 18px;
+      text-align: center;
+      min-width: 72px;
+    }
+    .stat-chip .num {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--tan);
+      display: block;
+      line-height: 1;
+    }
+    .stat-chip .lbl {
+      font-size: 0.58rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-top: 4px;
+      display: block;
+    }
+
+    /* ══ CONTENT AREA ══ */
+    .content { padding: 36px 52px 60px; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ══ SECTION TITLE ══ */
+    .section-title {
+      font-size: 0.65rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 36px 0 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ══ TOOL CARDS ══ */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 22px 22px 18px;
+      box-shadow: 0 1px 6px rgba(30,15,5,0.05);
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(30,15,5,0.10);
+    }
+    .card-icon { font-size: 1.4rem; margin-bottom: 10px; }
+    .card-title { font-size: 0.92rem; font-weight: 600; color: var(--espresso); }
+    .card-desc  { font-size: 0.79rem; color: var(--muted); margin-top: 5px; line-height: 1.55; }
+    .card-link {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 7px 16px;
+      background: var(--espresso);
+      color: var(--cream);
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: 0.3px;
+      transition: background 0.18s;
+    }
+    .card-link:hover { background: var(--walnut); }
+
+    /* ══ SOCIALS ══ */
+    .socials-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .social-pill {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 9px 20px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--espresso);
+      box-shadow: 0 1px 4px rgba(30,15,5,0.05);
+      transition: all 0.18s;
+    }
+    .social-pill:hover {
+      background: var(--espresso);
+      color: var(--cream);
+      border-color: var(--espresso);
+      transform: translateY(-1px);
+    }
+    .s-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tan); flex-shrink:0; }
+
+    /* ══ AREA CARDS ══ */
+    .areas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .area-card {
+      border-radius: 13px;
+      padding: 20px 20px 16px;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s;
+      box-shadow: 0 2px 8px rgba(30,15,5,0.12);
+      position: relative;
+      overflow: hidden;
+    }
+    .area-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(30,15,5,0.18); }
+    .area-card-title { font-weight: 700; font-size: 0.9rem; color: white; }
+    .area-card-desc  { font-size: 0.75rem; color: rgba(255,255,255,0.72); margin-top: 5px; line-height: 1.5; }
+
+    /* ══ FILTERS ══ */
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filter-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 16px;
+      font-size: 0.81rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.18s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--espresso);
+      color: var(--cream);
+      border-color: var(--espresso);
+    }
+
+    /* ══ TABLE ══ */
+    .table-wrap {
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(30,15,5,0.05);
+      overflow-x: auto;
+    }
+    .tasks-table { width: 100%; border-collapse: collapse; font-size: 0.865rem; }
+    .tasks-table th {
+      background: var(--espresso);
+      color: rgba(255,255,255,0.45);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 500;
+    }
+    .tasks-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .tasks-table tr:last-child td { border-bottom: none; }
+    .tasks-table tbody tr { background: var(--card); transition: background 0.15s; }
+    .tasks-table tbody tr:nth-child(even) { background: #faf6f0; }
+    .tasks-table tbody tr:hover td { background: #f3ece0; }
+
+    .area-chip {
+      display: inline-block;
+      padding: 3px 11px;
+      border-radius: 999px;
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: white;
+      white-space: nowrap;
+    }
+    .task-due-input {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.82rem;
+      font-family: inherit;
+      background: var(--cream);
+      color: var(--text);
+    }
+    .task-due-input:focus { outline: none; border-color: var(--walnut); }
+    .priority-chip {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.71rem;
+      font-weight: 700;
+    }
+    .pri-High   { background: #f0e4d8; color: #6B2800; }
+    .pri-Medium { background: #f0ead8; color: #5A4000; }
+    .pri-Low    { background: #e4ede0; color: #1E4A1E; }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: opacity 0.18s;
+    }
+    .status-pill:hover { opacity: 0.75; }
+    .s-done        { background: #ddeedd; color: #1a4a1a; }
+    .s-in-progress { background: #f0e8d0; color: #6a4400; }
+    .s-not-started { background: #ede8e2; color: #4a3828; }
+    .s-blocked     { background: #f0ddd8; color: #6a1a10; }
+
+    .task-check { width: 16px; height: 16px; accent-color: var(--walnut); cursor: pointer; }
+    .task-done td { opacity: 0.42; }
+
+    /* ══ MEETINGS ══ */
+    .meeting-card {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 5px rgba(30,15,5,0.05);
+    }
+    .meeting-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      cursor: pointer;
+      background: var(--espresso);
+      color: var(--cream);
+    }
+    .meeting-header:hover { background: var(--bark); }
+    .meeting-header .week-label { font-weight: 700; font-size: 1.05rem; }
+    .meeting-header .week-date  { font-size: 0.85rem; color: rgba(255,255,255,0.45); margin-top: 3px; }
+    .meeting-toggle { background: none; border: none; color: var(--tan); font-size: 1rem; cursor: pointer; }
+    .meeting-body { display: none; padding: 22px; }
+    .meeting-body.open { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+    @media (max-width: 700px) { .meeting-body.open { grid-template-columns: 1fr; } }
+    .meeting-section h4 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1.6px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+    .meeting-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      color: var(--text);
+      background: var(--cream);
+      transition: border-color 0.18s;
+    }
+    .meeting-textarea:focus { outline: none; border-color: var(--walnut); background: white; }
+    .upcoming-badge {
+      background: rgba(196,160,122,0.18);
+      color: var(--tan);
+      border: 1px solid rgba(196,160,122,0.4);
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+      margin-left: 10px;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+    }
+    .add-action-row { display: flex; gap: 8px; margin-top: 10px; }
+    .add-action-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.83rem;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+    }
+    .add-action-input:focus { outline: none; border-color: var(--walnut); }
+    .btn-sm {
+      padding: 8px 16px;
+      background: var(--espresso);
+      color: var(--cream);
+      border: none;
+      border-radius: 8px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: background 0.18s;
+    }
+    .btn-sm:hover { background: var(--walnut); }
+    .action-list { list-style: none; margin-top: 8px; }
+    .action-list li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 0;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #f0ebe2;
+    }
+    .action-list li:last-child { border-bottom: none; }
+    .now-header { background: var(--bark) !important; }
+
+    /* ══ SAVE BAR ══ */
+    .save-bar {
+      position: fixed;
+      bottom: 22px; right: 22px;
+      background: var(--espresso);
+      color: var(--tan);
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      display: none;
+      box-shadow: 0 4px 16px rgba(30,15,5,0.25);
+      z-index: 999;
+    }
+    .save-bar.show { display: block; animation: fadein 0.3s; }
+    @keyframes fadein { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ══ HAMBURGER BUTTON ══ */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px; left: 16px;
+      z-index: 200;
+      background: var(--espresso);
+      border: none;
+      border-radius: 10px;
+      width: 42px; height: 42px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(30,15,5,0.25);
+    }
+    .hamburger span {
+      display: block;
+      width: 20px; height: 2px;
+      background: var(--tan);
+      border-radius: 2px;
+      transition: all 0.25s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ══ OVERLAY ══ */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(30,15,5,0.5);
+      z-index: 90;
+      backdrop-filter: blur(2px);
+    }
+    .overlay.show { display: block; }
+
+    /* ══ RESPONSIVE ══ */
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+
+      .hamburger { display: flex; }
+
+      .sidebar {
+        width: 280px;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+        z-index: 150;
+      }
+      .sidebar.open { transform: translateX(0); }
+
+      .main-wrap { margin-left: 0; }
+
+      .top-header {
+        flex-direction: column;
+        padding: 70px 20px 24px;
+        gap: 16px;
+      }
+      .top-header h1 { font-size: 2.2rem; }
+      .top-header-date { text-align: left; }
+      .top-header-date .date-full { font-size: 1.6rem; }
+
+      .stat-chip { padding: 8px 12px; min-width: 60px; }
+      .stat-chip .num { font-size: 1.15rem; }
+
+      .content { padding: 20px 16px 60px; }
+
+      .cards-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .areas-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .card { padding: 16px 14px 14px; }
+      .area-card { padding: 14px 14px 12px; }
+
+      .socials-row { gap: 8px; }
+      .social-pill { padding: 7px 14px; font-size: 0.82rem; }
+
+      .filter-btn { padding: 6px 12px; font-size: 0.78rem; }
+
+      .tasks-table th, .tasks-table td { padding: 9px 10px; font-size: 0.78rem; }
+
+      .meeting-header { padding: 14px 16px; }
+      .meeting-body { padding: 16px; }
+      .meeting-body.open { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 420px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .areas-grid { grid-template-columns: 1fr; }
+      .stat-chips { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ HAMBURGER ══ -->
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="eyebrow">Command Center</div>
+    <div class="brand-name">Black Editors<br><em>Connect</em></div>
+    <div class="subbrand">Cyn &amp; Shavonne</div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-label">Navigate</div>
+    <button class="nav-item active" onclick="switchTab('dashboard',this)">
+      <span class="nav-icon">🏠</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="switchTab('actions',this)">
+      <span class="nav-icon">✅</span> Action Items
+    </button>
+    <button class="nav-item" onclick="switchTab('meetings',this)">
+      <span class="nav-icon">📅</span> Weekly Meetings
+    </button>
+    <button class="nav-item" onclick="switchTab('growth',this)">
+      <span class="nav-icon">📈</span> Community Growth
+    </button>
+    <button class="nav-item" onclick="switchTab('calendar',this)">
+      <span class="nav-icon">🗒</span> Content Calendar
+    </button>
+    <button class="nav-item" onclick="switchTab('newsletters',this)">
+      <span class="nav-icon">📬</span> Newsletter Archive
+    </button>
+
+    <div class="nav-label" style="margin-top:10px">Quick Links</div>
+    <a class="nav-item" href="https://drive.google.com/drive/folders/1T6YxHsW9QfC9BMvAk0C828anvLD3j4O7?usp=drive_link" target="_blank">
+      <span class="nav-icon">📁</span> Google Drive
+    </a>
+    <a class="nav-item" href="https://trello.com/b/JbZ36CDq/bec-overview" target="_blank">
+      <span class="nav-icon">📋</span> Trello
+    </a>
+    <a class="nav-item" href="https://us15.admin.mailchimp.com" target="_blank">
+      <span class="nav-icon">📣</span> Mailchimp
+    </a>
+    <a class="nav-item" href="https://mail.google.com" target="_blank">
+      <span class="nav-icon">📧</span> Gmail
+    </a>
+    <a class="nav-item" href="https://calendar.google.com" target="_blank">
+      <span class="nav-icon">🗓</span> Calendar
+    </a>
+    <a class="nav-item" href="https://us06web.zoom.us/j/85303812707?pwd=OyN4g9FaM3QimPKkXmBRUtUqJ0luLn.1" target="_blank">
+      <span class="nav-icon">📹</span> Zoom
+    </a>
+
+    <div class="nav-label" style="margin-top:10px">Social</div>
+    <a class="nav-item" href="https://instagram.com/BlackEditorsConnect" target="_blank">
+      <span class="nav-icon">📸</span> Instagram
+    </a>
+    <a class="nav-item" href="https://www.linkedin.com/groups/15188003/" target="_blank">
+      <span class="nav-icon">💼</span> LinkedIn
+    </a>
+    <a class="nav-item" href="https://blackeditorsconnect.substack.com" target="_blank">
+      <span class="nav-icon">📰</span> Substack
+    </a>
+    <a class="nav-item" href="https://blackeditorsconnect.com" target="_blank">
+      <span class="nav-icon">🌐</span> Website
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="founder-pill">
+      <div class="founder-avatar">S&amp;C</div>
+      <div>
+        <div class="founder-name">Cyn &amp; Shavonne</div>
+        <div class="founder-role">Co-Founders</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main-wrap">
+
+  <!-- TOP HEADER -->
+  <div class="top-header">
+    <div class="top-header-left">
+      <div class="eyebrow">Welcome back</div>
+      <h1>Black Editors<br><em>Connect</em></h1>
+      <div class="sub">Command Center</div>
+      <div class="header-meta">
+        <div class="stat-chips">
+          <div class="stat-chip">
+            <span class="num" id="stat-total">—</span>
+            <span class="lbl">Total Tasks</span>
+          </div>
+          <div class="stat-chip">
+            <span class="num" id="stat-progress">—</span>
+            <span class="lbl">In Progress</span>
+          </div>
+          <div class="stat-chip">
+            <span class="num" id="stat-done">—</span>
+            <span class="lbl">Done</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="top-header-date">
+      <span class="date-day" id="hdr-day"></span>
+      <span class="date-full" id="hdr-date"></span>
+      <span class="date-year" id="hdr-year"></span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── TAB: DASHBOARD ── -->
+    <div id="tab-dashboard" class="tab-panel active">
+
+      <div class="section-title">📅 This Week's Meeting</div>
+      <div id="dash-meeting-preview" style="margin-bottom:28px;"></div>
+
+      <div class="section-title">Social Media &amp; Web</div>
+      <div class="socials-row">
+        <a href="https://instagram.com/BlackEditorsConnect" target="_blank" class="social-pill">
+          <span class="s-dot"></span> Instagram
+        </a>
+        <a href="https://www.linkedin.com/groups/15188003/" target="_blank" class="social-pill">
+          <span class="s-dot" style="background:#7D9B76"></span> LinkedIn
+        </a>
+        <a href="https://blackeditorsconnect.substack.com" target="_blank" class="social-pill">
+          <span class="s-dot" style="background:#C4A07A"></span> Substack
+        </a>
+        <a href="https://blackeditorsconnect.com" target="_blank" class="social-pill">
+          <span class="s-dot" style="background:#9B7A5A"></span> Website
+        </a>
+      </div>
+
+      <div class="section-title">Work Areas</div>
+      <div class="areas-grid">
+        <div class="area-card" style="background:linear-gradient(135deg,#4A2060,#6B3A88);"
+             onclick="switchTab('actions',document.querySelector('[onclick*=actions]')); filterArea('Brand')">
+          <div class="area-card-title">🎨 Brand &amp; Identity</div>
+          <div class="area-card-desc">Logo, voice, visual identity &amp; brand kit</div>
+        </div>
+        <div class="area-card" style="background:linear-gradient(135deg,#7A2010,#A83828);"
+             onclick="switchTab('actions',document.querySelector('[onclick*=actions]')); filterArea('Marketing')">
+          <div class="area-card-title">📣 Marketing</div>
+          <div class="area-card-desc">Campaigns, Mailchimp &amp; content calendar</div>
+        </div>
+        <div class="area-card" style="background:linear-gradient(135deg,#1E4A30,#2E6A44);"
+             onclick="switchTab('actions',document.querySelector('[onclick*=actions]')); filterArea('Community')">
+          <div class="area-card-title">🤝 Community Building</div>
+          <div class="area-card-desc">Audience growth, events &amp; engagement</div>
+        </div>
+        <div class="area-card" style="background:linear-gradient(135deg,#1A3A5A,#2A5A8A);"
+             onclick="switchTab('actions',document.querySelector('[onclick*=actions]')); filterArea('Infrastructure')">
+          <div class="area-card-title">⚙️ Infrastructure</div>
+          <div class="area-card-desc">Drive folders, tools setup &amp; systems</div>
+        </div>
+        <div class="area-card" style="background:linear-gradient(135deg,#5A2E0A,#8A4A18);"
+             onclick="switchTab('actions',document.querySelector('[onclick*=actions]')); filterArea('Legal')">
+          <div class="area-card-title">⚖️ Legal</div>
+          <div class="area-card-desc">Agreements, registration &amp; compliance</div>
+        </div>
+        <div class="area-card" style="background:linear-gradient(135deg,#1E0F05,#3A200E);"
+             onclick="switchTab('meetings',document.querySelector('[onclick*=meetings]'))">
+          <div class="area-card-title">📅 Weekly Meetings</div>
+          <div class="area-card-desc">Meeting notes, to-dos &amp; next steps</div>
+        </div>
+      </div>
+
+    </div><!-- /dashboard -->
+
+    <!-- ── TAB: ACTION ITEMS ── -->
+    <div id="tab-actions" class="tab-panel">
+      <div class="filters" id="area-filters">
+        <button class="filter-btn active" onclick="filterArea('All')">All</button>
+        <button class="filter-btn" onclick="filterArea('Brand')">🎨 Brand &amp; Identity</button>
+        <button class="filter-btn" onclick="filterArea('Marketing')">📣 Marketing</button>
+        <button class="filter-btn" onclick="filterArea('Community')">🤝 Community</button>
+        <button class="filter-btn" onclick="filterArea('Infrastructure')">⚙️ Infrastructure</button>
+        <button class="filter-btn" onclick="filterArea('Legal')">⚖️ Legal</button>
+      </div>
+      <div class="table-wrap">
+        <table class="tasks-table">
+          <thead>
+            <tr>
+              <th style="width:36px">✓</th>
+              <th>Area</th>
+              <th>Task</th>
+              <th>Owner</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="tasks-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB: WEEKLY MEETINGS ── -->
+    <div id="tab-meetings" class="tab-panel">
+      <p style="font-size:0.84rem;color:var(--muted);margin-bottom:20px;">Notes &amp; action items save automatically in your browser.</p>
+      <div id="meetings-container"></div>
+    </div>
+
+    <!-- ── TAB: COMMUNITY GROWTH ── -->
+    <div id="tab-growth" class="tab-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <div class="section-title" style="margin-top:0">📈 Community Growth Tracker</div>
+          <p style="font-size:0.84rem;color:var(--muted);">Log your numbers each week. Growth is calculated automatically.</p>
+        </div>
+        <button class="btn-sm" onclick="addGrowthRow()">+ Log This Week</button>
+      </div>
+
+      <!-- Platform total cards -->
+      <div class="cards-grid" style="margin-bottom:28px;" id="growth-totals">
+        <div class="card" style="text-align:center">
+          <div class="card-icon">📸</div>
+          <div class="card-title">Instagram</div>
+          <div id="gt-ig" style="font-size:1.8rem;font-weight:800;color:var(--espresso);margin:6px 0">—</div>
+          <div id="gd-ig" style="font-size:0.8rem;color:var(--muted)">followers</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-icon">💼</div>
+          <div class="card-title">LinkedIn</div>
+          <div id="gt-li" style="font-size:1.8rem;font-weight:800;color:var(--espresso);margin:6px 0">—</div>
+          <div id="gd-li" style="font-size:0.8rem;color:var(--muted)">members</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-icon">📰</div>
+          <div class="card-title">Substack</div>
+          <div id="gt-ss" style="font-size:1.8rem;font-weight:800;color:var(--espresso);margin:6px 0">—</div>
+          <div id="gd-ss" style="font-size:0.8rem;color:var(--muted)">subscribers</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div class="card-icon">📧</div>
+          <div class="card-title">Email List</div>
+          <div id="gt-em" style="font-size:1.8rem;font-weight:800;color:var(--espresso);margin:6px 0">—</div>
+          <div id="gd-em" style="font-size:0.8rem;color:var(--muted)">subscribers</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="tasks-table" id="growth-table">
+          <thead>
+            <tr>
+              <th>Week Of</th>
+              <th>📸 Instagram</th>
+              <th>+/-</th>
+              <th>💼 LinkedIn</th>
+              <th>+/-</th>
+              <th>📰 Substack</th>
+              <th>+/-</th>
+              <th>📧 Email List</th>
+              <th>+/-</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="growth-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TAB: CONTENT CALENDAR ── -->
+    <div id="tab-calendar" class="tab-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <div class="section-title" style="margin-top:0">🗒 Content Calendar</div>
+          <p style="font-size:0.84rem;color:var(--muted);">Plan your content across all platforms. Click status to update.</p>
+        </div>
+        <button class="btn-sm" onclick="addCalRow()">+ Add Content</button>
+      </div>
+
+      <!-- Platform filters -->
+      <div class="filters" id="cal-filters">
+        <button class="filter-btn active" onclick="filterCal('All')">All Platforms</button>
+        <button class="filter-btn" onclick="filterCal('Instagram')">📸 Instagram</button>
+        <button class="filter-btn" onclick="filterCal('LinkedIn')">💼 LinkedIn</button>
+        <button class="filter-btn" onclick="filterCal('Substack')">📰 Substack</button>
+        <button class="filter-btn" onclick="filterCal('Website')">🌐 Website</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="tasks-table" id="cal-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Platform</th>
+              <th>Type</th>
+              <th>Title / Topic</th>
+              <th>Owner</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cal-body"></tbody>
+        </table>
+      </div>
+      <p style="font-size:0.78rem;color:var(--muted);margin-top:16px;font-style:italic;">
+        ✦ Placeholder — fill in your content plan as you build it out.
+      </p>
+    </div>
+
+    <!-- ── TAB: NEWSLETTER ARCHIVE ── -->
+    <div id="tab-newsletters" class="tab-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+        <div>
+          <div class="section-title" style="margin-top:0">📬 Newsletter Archive</div>
+          <p style="font-size:0.84rem;color:var(--muted);">Your monthly issues in one place. Paste a Substack link or PDF URL — click the share button to copy instantly.</p>
+        </div>
+        <button class="btn-sm" onclick="addNewsletter()">+ Add Issue</button>
+      </div>
+
+      <div id="newsletter-grid"></div>
+
+      <div id="copy-toast" style="
+        display:none;position:fixed;bottom:22px;left:50%;transform:translateX(-50%);
+        background:var(--espresso);color:var(--tan);padding:10px 22px;
+        border-radius:10px;font-size:0.82rem;font-weight:600;
+        box-shadow:0 4px 16px rgba(30,15,5,0.25);z-index:999;">
+        ✦ Link copied!
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main-wrap -->
+
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lock-screen" style="
+  display:none;
+  position:fixed;inset:0;
+  background:var(--espresso);
+  background-image:radial-gradient(ellipse at 30% 60%, rgba(196,160,122,0.12) 0%, transparent 60%),
+                   radial-gradient(ellipse at 80% 20%, rgba(107,60,30,0.2) 0%, transparent 55%);
+  z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+">
+  <div style="text-align:center;max-width:340px;width:90%;padding:20px;">
+    <div style="font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--tan);margin-bottom:16px;font-weight:600;">Command Center</div>
+    <div style="font-family:'DM Sans',sans-serif;font-weight:900;font-size:2rem;color:var(--cream);line-height:1.1;margin-bottom:6px;">Black Editors<br><span style="font-weight:300;color:var(--tan);">Connect</span></div>
+    <div style="font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:40px;">Private Dashboard</div>
+
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:30px 28px;">
+      <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:16px;font-weight:600;">Enter PIN to continue</div>
+
+      <input id="pin-input" type="password" inputmode="numeric" maxlength="6"
+        placeholder="······"
+        style="
+          width:100%;padding:14px;
+          background:rgba(255,255,255,0.07);
+          border:1px solid rgba(255,255,255,0.15);
+          border-radius:10px;
+          color:var(--cream);font-size:1.4rem;
+          text-align:center;letter-spacing:8px;
+          font-family:'DM Sans',sans-serif;
+          outline:none;transition:border-color 0.2s;
+        "
+        onkeydown="if(event.key==='Enter')checkPin()"
+        oninput="clearPinError()"
+      />
+
+      <div id="pin-error" style="color:#e88;font-size:0.8rem;margin-top:10px;min-height:20px;"></div>
+
+      <button onclick="checkPin()" style="
+        width:100%;margin-top:8px;padding:14px;
+        background:var(--tan);color:var(--espresso);
+        border:none;border-radius:10px;
+        font-size:0.9rem;font-weight:800;
+        cursor:pointer;font-family:'DM Sans',sans-serif;
+        letter-spacing:1px;text-transform:uppercase;
+        transition:background 0.2s;
+      " onmouseover="this.style.background='#d4b08a'" onmouseout="this.style.background='var(--tan)'">
+        Unlock →
+      </button>
+    </div>
+
+    <div style="font-size:0.72rem;color:rgba(255,255,255,0.2);margin-top:24px;">
+      Black Editors Connect · Cyn &amp; Shavonne
+    </div>
+  </div>
+</div>
+
+<div class="save-bar" id="save-bar">✦ Saved</div>
+
+<script>
+  // ── PIN Lock ───────────────────────────────────────────
+  const CORRECT_PIN = '110525';
+  const UNLOCK_KEY  = 'bec_unlocked';
+
+  function checkPin() {
+    const input = document.getElementById('pin-input').value.trim();
+    if (input === CORRECT_PIN) {
+      sessionStorage.setItem(UNLOCK_KEY, '1');
+      document.getElementById('lock-screen').style.display = 'none';
+    } else {
+      const err = document.getElementById('pin-error');
+      err.textContent = 'Incorrect PIN. Please try again.';
+      document.getElementById('pin-input').value = '';
+      document.getElementById('pin-input').focus();
+    }
+  }
+
+  function clearPinError() {
+    document.getElementById('pin-error').textContent = '';
+  }
+
+  // Show lock screen if not unlocked this session
+  if (!sessionStorage.getItem(UNLOCK_KEY)) {
+    document.getElementById('lock-screen').style.display = 'flex';
+    setTimeout(() => document.getElementById('pin-input').focus(), 100);
+  }
+
+  // ── Date ──────────────────────────────────────────────
+  const now = new Date();
+  document.getElementById('hdr-day').textContent =
+    now.toLocaleDateString('en-US',{weekday:'long'});
+  document.getElementById('hdr-date').textContent =
+    now.toLocaleDateString('en-US',{month:'long',day:'numeric'});
+  document.getElementById('hdr-year').textContent =
+    now.getFullYear();
+
+  // ── Sidebar toggle (mobile) ───────────────────────────
+  function toggleSidebar() {
+    const sb  = document.getElementById('sidebar');
+    const hb  = document.getElementById('hamburger');
+    const ov  = document.getElementById('overlay');
+    sb.classList.toggle('open');
+    hb.classList.toggle('open');
+    ov.classList.toggle('show');
+  }
+
+  // ── Tabs ──────────────────────────────────────────────
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+    document.getElementById('tab-'+id).classList.add('active');
+    if (btn) btn.classList.add('active');
+    // Close sidebar on mobile after nav
+    const sb = document.getElementById('sidebar');
+    if (sb.classList.contains('open')) toggleSidebar();
+  }
+
+  // ── Tasks ─────────────────────────────────────────────
+  const TASKS = [
+    {area:'Brand',  label:'🎨 Brand & Identity',    color:'#4A2060', task:"Define brand voice, tone & mission statement", owner:'Both',     due:'', status:'In Progress', notes:'Core to everything — lock this in first'},
+    {area:'Brand',  label:'🎨 Brand & Identity',    color:'#4A2060', task:'Create logo & visual identity (colors, fonts)', owner:'Shavonne', due:'', status:'Not Started', notes:'Can use Canva or hire a designer'},
+    {area:'Brand',  label:'🎨 Brand & Identity',    color:'#4A2060', task:'Build brand kit / style guide doc',             owner:'Both',     due:'', status:'Not Started', notes:'Save in Google Drive > Brand folder'},
+    {area:'Brand',  label:'🎨 Brand & Identity',    color:'#4A2060', task:'Set up branded email signatures',              owner:'Both',     due:'', status:'Not Started', notes:''},
+    {area:'Marketing',label:'📣 Marketing',         color:'#7A2010', task:'Set up & configure Mailchimp account',         owner:'Cyn',      due:'', status:'Not Started', notes:'Connect to website + build subscriber list'},
+    {area:'Marketing',label:'📣 Marketing',         color:'#7A2010', task:'Create first email newsletter template',        owner:'Both',     due:'', status:'Not Started', notes:'Brand-aligned design in Mailchimp'},
+    {area:'Marketing',label:'📣 Marketing',         color:'#7A2010', task:'Plan content calendar (30-day)',                owner:'Both',     due:'', status:'In Progress', notes:'Align with Substack + social schedule'},
+    {area:'Marketing',label:'📣 Marketing',         color:'#7A2010', task:'Write and send first Mailchimp campaign',      owner:'Cyn',      due:'', status:'Not Started', notes:''},
+    {area:'Community',label:'🤝 Community Building',color:'#1E4A30', task:'Define target community & ideal member profile',owner:'Both',     due:'', status:'In Progress', notes:''},
+    {area:'Community',label:'🤝 Community Building',color:'#1E4A30', task:'Plan first community event or gathering',      owner:'Both',     due:'', status:'Not Started', notes:'Virtual or IRL — set a date!'},
+    {area:'Community',label:'🤝 Community Building',color:'#1E4A30', task:'Set up community channels / platform',        owner:'Cyn',      due:'', status:'Not Started', notes:'Substack threads, Discord, or Slack?'},
+    {area:'Community',label:'🤝 Community Building',color:'#1E4A30', task:'Grow email list to first milestone',          owner:'Both',     due:'', status:'Not Started', notes:'Track in Mailchimp'},
+    {area:'Infrastructure',label:'⚙️ Infrastructure',color:'#1A3A5A',task:'Structure Google Drive folder system',        owner:'Shavonne', due:'', status:'In Progress', notes:'Brand / Marketing / Legal / Finance / Meetings'},
+    {area:'Infrastructure',label:'⚙️ Infrastructure',color:'#1A3A5A',task:'Set up Trello boards for each work area',     owner:'Both',     due:'', status:'Not Started', notes:'One board per area'},
+    {area:'Infrastructure',label:'⚙️ Infrastructure',color:'#1A3A5A',task:'Configure shared Gmail & Calendar',          owner:'Shavonne', due:'', status:'Not Started', notes:'Use a shared company email address'},
+    {area:'Infrastructure',label:'⚙️ Infrastructure',color:'#1A3A5A',task:'Create recurring Zoom link for weekly sync', owner:'Cyn',      due:'', status:'Not Started', notes:'Add to calendar invite for both founders'},
+    {area:'Legal',label:'⚖️ Legal',                 color:'#5A2E0A', task:'Draft co-founder agreement / partnership terms',owner:'Both',   due:'', status:'Not Started', notes:'Equity split, roles, IP ownership'},
+    {area:'Legal',label:'⚖️ Legal',                 color:'#5A2E0A', task:'Register business entity (LLC or Corp)',      owner:'Both',     due:'', status:'Not Started', notes:'Confirm state of registration'},
+    {area:'Legal',label:'⚖️ Legal',                 color:'#5A2E0A', task:'Open business bank account',                 owner:'Both',     due:'', status:'Not Started', notes:'After entity registration'},
+    {area:'Legal',label:'⚖️ Legal',                 color:'#5A2E0A', task:'Secure trademarks / domain names',           owner:'Shavonne', due:'', status:'Not Started', notes:'Check USPTO & ICANN availability'},
+  ];
+
+  const SS = {Done:'s-done','In Progress':'s-in-progress','Not Started':'s-not-started',Blocked:'s-blocked'};
+  const SC = ['Not Started','In Progress','Done','Blocked'];
+
+  function loadT() {
+    try { return JSON.parse(localStorage.getItem('bec_tasks')||'null') || TASKS.map(t=>({...t,done:false})); }
+    catch(e) { return TASKS.map(t=>({...t,done:false})); }
+  }
+  function saveT(t) {
+    try { localStorage.setItem('bec_tasks',JSON.stringify(t)); } catch(e) {}
+    updateStats(); showSave();
+  }
+
+  let tasks = loadT();
+  let filter = 'All';
+
+  function filterArea(area) {
+    filter = area;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      const txt = b.textContent.trim();
+      b.classList.toggle('active', area==='All' ? txt==='All' : txt.includes(area));
+    });
+    renderTasks();
+  }
+
+  function cycleStatus(i) {
+    const next = SC[(SC.indexOf(tasks[i].status)+1)%SC.length];
+    tasks[i].status = next;
+    tasks[i].done = next==='Done';
+    saveT(tasks); renderTasks();
+  }
+  function toggleDone(i) {
+    tasks[i].done = !tasks[i].done;
+    tasks[i].status = tasks[i].done ? 'Done' : 'Not Started';
+    saveT(tasks); renderTasks();
+  }
+
+  function renderTasks() {
+    const tbody = document.getElementById('tasks-body');
+    const rows = tasks.map((t,i)=>({...t,_i:i}))
+      .filter(t => filter==='All' || t.area===filter);
+    tbody.innerHTML = rows.map(t=>`
+      <tr class="${t.done?'task-done':''}" data-area="${t.area}">
+        <td><input type="checkbox" class="task-check" ${t.done?'checked':''} onchange="toggleDone(${t._i})"></td>
+        <td><span class="area-chip" style="background:${t.color}">${t.label}</span></td>
+        <td>${t.task}</td>
+        <td style="white-space:nowrap;font-size:0.82rem">${t.owner}</td>
+        <td><input type="date" class="task-due-input" value="${t.due||''}" onchange="updateTaskDue(${t._i},this.value)"></td>
+        <td><button class="status-pill ${SS[t.status]||'s-not-started'}" onclick="cycleStatus(${t._i})" title="Click to change">${t.status}</button></td>
+        <td style="color:var(--muted);font-size:0.79rem">${t.notes}</td>
+      </tr>`).join('');
+  }
+
+  function updateTaskDue(i, val) {
+    tasks[i].due = val;
+    saveT();
+  }
+
+  function updateStats() {
+    document.getElementById('stat-total').textContent    = tasks.length;
+    document.getElementById('stat-progress').textContent = tasks.filter(t=>t.status==='In Progress').length;
+    document.getElementById('stat-done').textContent     = tasks.filter(t=>t.done).length;
+  }
+
+  // ── Meetings ──────────────────────────────────────────
+  function saturday(d) {
+    const dt=new Date(d), day=dt.getDay();
+    // Find the most recent Saturday (or today if it's Saturday)
+    const diff = day >= 6 ? 0 : -(day + 1);
+    dt.setDate(dt.getDate() + diff); return dt;
+  }
+  function fmt(d) { return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  function loadM(k) { try{return JSON.parse(localStorage.getItem('bec_m_'+k)||'{}')}catch(e){return{}} }
+  function saveM(k,d){ try{localStorage.setItem('bec_m_'+k,JSON.stringify(d))}catch(e){} showSave(); }
+
+  function buildMeetings() {
+    const c = document.getElementById('meetings-container');
+    const sat = saturday(new Date());
+    const weeks = [];
+    // Current Saturday first, then past Saturdays newest→oldest, then future
+    const order = [0, -1, -2, -3, -4, -5, -6, -7, 1, 2, 3];
+    for (const i of order) {
+      const d=new Date(sat); d.setDate(d.getDate()+i*7);
+      weeks.push({date:new Date(d),upcoming:i>0,isNow:i===0});
+    }
+    c.innerHTML = weeks.map((w,mi)=>{
+      const key=w.date.toISOString().slice(0,10);
+      const sv=loadM(key);
+      const badge=w.upcoming?'<span class="upcoming-badge">Upcoming</span>':'';
+      const lbl=w.isNow?'📍 This Week':(w.upcoming?'Future':'Past');
+      return `<div class="meeting-card">
+        <div class="meeting-header ${w.isNow?'now-header':''}" onclick="tog('m${mi}')">
+          <div>
+            <span class="week-label">Week of ${fmt(w.date)}${badge}</span><br>
+            <span class="week-date">${lbl}</span>
+          </div>
+          <button class="meeting-toggle" id="tg-m${mi}">${w.isNow?'▲':'▼'}</button>
+        </div>
+        <div class="meeting-body ${w.isNow?'open':''}" id="bd-m${mi}">
+          <div class="meeting-section">
+            <h4>Meeting Notes</h4>
+            <textarea class="meeting-textarea" id="no-${key}" placeholder="Notes from this meeting…" onchange="svm('${key}')">${sv.notes||''}</textarea>
+            <h4 style="margin-top:14px">Past To-Dos</h4>
+            <textarea class="meeting-textarea" id="td-${key}" placeholder="What was on the list last week…" onchange="svm('${key}')">${sv.todos||''}</textarea>
+          </div>
+          <div class="meeting-section">
+            <h4>New Action Items</h4>
+            <ul class="action-list" id="al-${key}"></ul>
+            <div class="add-action-row">
+              <input class="add-action-input" id="ai-${key}" placeholder="Add an action item…" onkeydown="if(event.key==='Enter')addAI('${key}')">
+              <button class="btn-sm" onclick="addAI('${key}')">+ Add</button>
+            </div>
+            <h4 style="margin-top:14px">Attendees</h4>
+            <textarea class="meeting-textarea" id="at-${key}" placeholder="Cyn, Shavonne…" style="min-height:50px" onchange="svm('${key}')">${sv.attendees||'Cyn, Shavonne'}</textarea>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    weeks.forEach(w=>{
+      const k=w.date.toISOString().slice(0,10);
+      renderAL(k,(loadM(k).actions||[]));
+    });
+  }
+
+  function tog(id){
+    const b=document.getElementById('bd-'+id),t=document.getElementById('tg-'+id);
+    const o=b.classList.toggle('open'); t.textContent=o?'▲':'▼';
+  }
+  function svm(key){
+    const d=loadM(key);
+    d.notes=document.getElementById('no-'+key)?.value||'';
+    d.todos=document.getElementById('td-'+key)?.value||'';
+    d.attendees=document.getElementById('at-'+key)?.value||'';
+    saveM(key,d);
+  }
+  function addAI(key){
+    const inp=document.getElementById('ai-'+key);
+    const val=inp.value.trim(); if(!val)return;
+    const d=loadM(key); d.actions=d.actions||[];
+    d.actions.push({text:val,done:false}); saveM(key,d);
+    inp.value=''; renderAL(key,d.actions);
+  }
+  function togAI(key,i){
+    const d=loadM(key); d.actions[i].done=!d.actions[i].done; saveM(key,d); renderAL(key,d.actions);
+  }
+  function renderAL(key,actions){
+    const ul=document.getElementById('al-'+key); if(!ul)return;
+    ul.innerHTML=actions.map((a,i)=>`<li>
+      <input type="checkbox" class="task-check" ${a.done?'checked':''} onchange="togAI('${key}',${i})">
+      <span style="${a.done?'text-decoration:line-through;color:var(--muted)':''}">${a.text}</span>
+    </li>`).join('');
+  }
+
+  function showSave(){
+    const bar=document.getElementById('save-bar');
+    bar.classList.add('show');
+    clearTimeout(window._st);
+    window._st=setTimeout(()=>bar.classList.remove('show'),2000);
+  }
+
+  // ══ COMMUNITY GROWTH TRACKER ══════════════════════════
+  const GROWTH_KEY = 'bec_growth';
+  function loadGrowth() {
+    try { return JSON.parse(localStorage.getItem(GROWTH_KEY)||'[]'); } catch(e) { return []; }
+  }
+  function saveGrowth(d) {
+    try { localStorage.setItem(GROWTH_KEY,JSON.stringify(d)); } catch(e) {}
+    showSave();
+  }
+
+  function addGrowthRow() {
+    const rows = loadGrowth();
+    const today = new Date().toISOString().slice(0,10);
+    rows.unshift({week:today, ig:'', li:'', ss:'', em:'', notes:''});
+    saveGrowth(rows);
+    renderGrowth();
+  }
+
+  function deleteGrowthRow(i) {
+    const rows = loadGrowth();
+    rows.splice(i,1);
+    saveGrowth(rows);
+    renderGrowth();
+  }
+
+  function updateGrowth(i, field, val) {
+    const rows = loadGrowth();
+    rows[i][field] = val;
+    saveGrowth(rows);
+    renderGrowthTotals(rows);
+  }
+
+  function delta(rows, i, field) {
+    const cur = parseInt(rows[i][field])||0;
+    if (i >= rows.length-1 || !rows[i+1][field]) return '';
+    const prev = parseInt(rows[i+1][field])||0;
+    const diff = cur - prev;
+    if (diff === 0) return '<span style="color:var(--muted)">—</span>';
+    const color = diff > 0 ? '#1E6A1E' : '#8A1A1A';
+    const arrow = diff > 0 ? '▲' : '▼';
+    return `<span style="color:${color};font-weight:700;font-size:0.8rem">${arrow} ${Math.abs(diff)}</span>`;
+  }
+
+  function renderGrowthTotals(rows) {
+    if (!rows.length) return;
+    const latest = rows[0];
+    ['ig','li','ss','em'].forEach(f => {
+      const el = document.getElementById('gt-'+f);
+      if (el) el.textContent = latest[f] ? parseInt(latest[f]).toLocaleString() : '—';
+    });
+  }
+
+  function renderGrowth() {
+    const rows = loadGrowth();
+    const tbody = document.getElementById('growth-body');
+    if (!tbody) return;
+    tbody.innerHTML = rows.map((r,i) => `
+      <tr>
+        <td><input type="date" value="${r.week}" onchange="updateGrowth(${i},'week',this.value)"
+          style="border:none;background:transparent;font-family:inherit;font-size:0.85rem;color:var(--text);width:130px"></td>
+        <td><input type="number" value="${r.ig}" placeholder="0" onchange="updateGrowth(${i},'ig',this.value)"
+          style="width:80px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.85rem;font-family:inherit"></td>
+        <td>${delta(rows,i,'ig')}</td>
+        <td><input type="number" value="${r.li}" placeholder="0" onchange="updateGrowth(${i},'li',this.value)"
+          style="width:80px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.85rem;font-family:inherit"></td>
+        <td>${delta(rows,i,'li')}</td>
+        <td><input type="number" value="${r.ss}" placeholder="0" onchange="updateGrowth(${i},'ss',this.value)"
+          style="width:80px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.85rem;font-family:inherit"></td>
+        <td>${delta(rows,i,'ss')}</td>
+        <td><input type="number" value="${r.em}" placeholder="0" onchange="updateGrowth(${i},'em',this.value)"
+          style="width:80px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.85rem;font-family:inherit"></td>
+        <td>${delta(rows,i,'em')}</td>
+        <td><input type="text" value="${r.notes||''}" placeholder="Notes…" onchange="updateGrowth(${i},'notes',this.value)"
+          style="width:140px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.85rem;font-family:inherit"></td>
+        <td><button onclick="deleteGrowthRow(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem" title="Delete row">✕</button></td>
+      </tr>`).join('');
+    renderGrowthTotals(rows);
+  }
+
+  // ══ CONTENT CALENDAR ══════════════════════════════════
+  const CAL_KEY = 'bec_cal';
+  const CAL_STATUSES = ['Idea','In Progress','Scheduled','Published'];
+  const CAL_STATUS_STYLES = {
+    'Idea':        's-not-started',
+    'In Progress': 's-in-progress',
+    'Scheduled':   's-done',
+    'Published':   's-done',
+  };
+  const CAL_STATUS_COLORS = {
+    'Idea':        {bg:'#ede8e2',color:'#4a3828'},
+    'In Progress': {bg:'#f0e8d0',color:'#6a4400'},
+    'Scheduled':   {bg:'#dde8f0',color:'#1a3a5a'},
+    'Published':   {bg:'#ddeedd',color:'#1a4a1a'},
+  };
+
+  const DEFAULT_CAL = [
+    {date:'', platform:'Instagram', type:'Post',      title:'Introduce Black Editors Connect',   owner:'Both',     status:'Idea',   notes:'First impression post'},
+    {date:'', platform:'Substack',  type:'Newsletter', title:'Welcome to Black Editors Connect',  owner:'Shavonne', status:'Idea',   notes:'First issue — our story & mission'},
+    {date:'', platform:'LinkedIn',  type:'Post',       title:'Group announcement & intro',        owner:'Cyn',      status:'Idea',   notes:'Pin to top of group'},
+    {date:'', platform:'Instagram', type:'Reel',       title:'Meet the founders',                 owner:'Both',     status:'Idea',   notes:'30–60 sec intro video'},
+    {date:'', platform:'Website',   type:'Page',       title:'About page copy',                   owner:'Both',     status:'Idea',   notes:'Brand voice finalized first'},
+  ];
+
+  let calFilter = 'All';
+
+  function loadCal() {
+    try { return JSON.parse(localStorage.getItem(CAL_KEY)||'null') || DEFAULT_CAL; } catch(e) { return DEFAULT_CAL; }
+  }
+  function saveCal(d) {
+    try { localStorage.setItem(CAL_KEY,JSON.stringify(d)); } catch(e) {}
+    showSave();
+  }
+
+  function addCalRow() {
+    const rows = loadCal();
+    rows.unshift({date:'', platform:'Instagram', type:'Post', title:'', owner:'Both', status:'Idea', notes:''});
+    saveCal(rows); renderCal();
+  }
+
+  function deleteCalRow(i) {
+    const rows = loadCal(); rows.splice(i,1); saveCal(rows); renderCal();
+  }
+
+  function updateCal(i, field, val) {
+    const rows = loadCal(); rows[i][field] = val; saveCal(rows);
+    if (field === 'status') renderCal();
+  }
+
+  function cycleCalStatus(i) {
+    const rows = loadCal();
+    const cur = rows[i].status;
+    rows[i].status = CAL_STATUSES[(CAL_STATUSES.indexOf(cur)+1)%CAL_STATUSES.length];
+    saveCal(rows); renderCal();
+  }
+
+  function filterCal(platform) {
+    calFilter = platform;
+    document.querySelectorAll('#cal-filters .filter-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.trim().includes(platform) || (platform==='All' && b.textContent.trim()==='All Platforms'));
+    });
+    renderCal();
+  }
+
+  function renderCal() {
+    const rows = loadCal();
+    const tbody = document.getElementById('cal-body');
+    if (!tbody) return;
+    const filtered = rows.map((r,i)=>({...r,_i:i}))
+      .filter(r => calFilter==='All' || r.platform===calFilter);
+
+    const PLATFORM_COLORS = {
+      'Instagram':'#7A2010','LinkedIn':'#1A3A5A','Substack':'#5A2E0A','Website':'#1E4A30'
+    };
+
+    tbody.innerHTML = filtered.map(r => {
+      const sc = CAL_STATUS_COLORS[r.status] || {bg:'#ede8e2',color:'#4a3828'};
+      const pc = PLATFORM_COLORS[r.platform] || '#3A200E';
+      return `<tr>
+        <td><input type="date" value="${r.date||''}" onchange="updateCal(${r._i},'date',this.value)"
+          style="border:none;background:transparent;font-family:inherit;font-size:0.85rem;color:var(--text);width:130px"></td>
+        <td><span class="area-chip" style="background:${pc}">${r.platform}</span></td>
+        <td style="font-size:0.82rem;color:var(--muted)">${r.type}</td>
+        <td><input type="text" value="${r.title||''}" placeholder="Title or topic…" onchange="updateCal(${r._i},'title',this.value)"
+          style="width:100%;min-width:160px;border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:0.85rem;font-family:inherit"></td>
+        <td style="font-size:0.82rem;white-space:nowrap">${r.owner}</td>
+        <td><button onclick="cycleCalStatus(${r._i})"
+          style="background:${sc.bg};color:${sc.color};border:none;border-radius:999px;padding:4px 12px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit"
+          title="Click to change">${r.status}</button></td>
+        <td><input type="text" value="${r.notes||''}" placeholder="Notes…" onchange="updateCal(${r._i},'notes',this.value)"
+          style="width:130px;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:0.82rem;font-family:inherit"></td>
+        <td><button onclick="deleteCalRow(${r._i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem" title="Delete">✕</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ── Dashboard Meeting Preview ─────────────────────────
+  function renderDashMeeting() {
+    const el = document.getElementById('dash-meeting-preview');
+    if (!el) return;
+    const sat = saturday(new Date());
+    const key = sat.toISOString().slice(0,10);
+    const saved = loadM(key);
+    const actions = saved.actions || [];
+    const nextSat = new Date(sat); nextSat.setDate(nextSat.getDate()+7);
+    const nextKey = nextSat.toISOString().slice(0,10);
+    const nextSaved = loadM(nextKey);
+
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="card">
+          <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">This Saturday · ${fmt(sat)}</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--espresso);margin-bottom:10px;">Action Items</div>
+          ${actions.length
+            ? `<ul class="action-list">${actions.map((a,i)=>`
+                <li>
+                  <input type="checkbox" class="task-check" ${a.done?'checked':''}
+                    onchange="togAI('${key}',${i}); renderDashMeeting()">
+                  <span style="${a.done?'text-decoration:line-through;color:var(--muted)':''}">${a.text}</span>
+                </li>`).join('')}</ul>`
+            : `<p style="font-size:0.82rem;color:var(--muted);font-style:italic;">No action items yet — add them in Weekly Meetings.</p>`
+          }
+        </div>
+        <div class="card">
+          <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">Next Saturday · ${fmt(nextSat)}</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--espresso);margin-bottom:10px;">Agenda / Topics</div>
+          <textarea class="meeting-textarea" style="min-height:80px;font-size:0.875rem;"
+            placeholder="What do you want to cover next week…"
+            onchange="(function(v){const d=loadM('${nextKey}');d.notes=v;saveM('${nextKey}',d);renderDashMeeting()})(this.value)"
+          >${nextSaved.notes||''}</textarea>
+        </div>
+      </div>
+      <p style="font-size:0.78rem;color:var(--muted);">✦ Saturday is your meeting day. View full history in <strong>Weekly Meetings</strong>.</p>`;
+  }
+
+  // ══ NEWSLETTER ARCHIVE ════════════════════════════════
+  const NL_KEY = 'bec_newsletters';
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function loadNL() {
+    try { return JSON.parse(localStorage.getItem(NL_KEY)||'[]'); } catch(e) { return []; }
+  }
+  function saveNL(d) {
+    try { localStorage.setItem(NL_KEY,JSON.stringify(d)); } catch(e) {}
+    showSave();
+  }
+
+  function addNewsletter() {
+    const now = new Date();
+    const issues = loadNL();
+    issues.unshift({
+      month: now.getMonth(),
+      year:  now.getFullYear(),
+      title: '',
+      url:   '',
+      type:  'Substack',
+      status:'Draft',
+      notes: ''
+    });
+    saveNL(issues);
+    renderNewsletters();
+  }
+
+  function updateNL(i, field, val) {
+    const issues = loadNL();
+    issues[i][field] = isNaN(val) || field==='title'||field==='url'||field==='notes'||field==='type'||field==='status' ? val : Number(val);
+    saveNL(issues);
+    if (field==='status') renderNewsletters();
+  }
+
+  function deleteNL(i) {
+    const issues = loadNL();
+    issues.splice(i,1);
+    saveNL(issues);
+    renderNewsletters();
+  }
+
+  function copyLink(url) {
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(() => {
+      const toast = document.getElementById('copy-toast');
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 2000);
+    });
+  }
+
+  function renderNewsletters() {
+    const el = document.getElementById('newsletter-grid');
+    if (!el) return;
+    const issues = loadNL();
+
+    if (!issues.length) {
+      el.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+        <div style="font-size:2.5rem;margin-bottom:12px;">📬</div>
+        <p style="font-size:0.95rem;font-weight:600;color:var(--espresso);">No issues yet</p>
+        <p style="font-size:0.84rem;margin-top:6px;">Hit "+ Add Issue" to log your first newsletter.</p>
+      </div>`;
+      return;
+    }
+
+    const STATUS_COLORS = {
+      'Draft':     {bg:'#ede8e2',color:'#4a3828'},
+      'Published': {bg:'#ddeedd',color:'#1a4a1a'},
+    };
+
+    el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">` +
+      issues.map((n,i) => {
+        const sc = STATUS_COLORS[n.status] || STATUS_COLORS['Draft'];
+        const monthName = MONTHS[n.month] || MONTHS[0];
+        return `<div class="card" style="position:relative;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:14px;">
+            <div>
+              <div style="font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:4px;">
+                <select onchange="updateNL(${i},'month',this.value)"
+                  style="border:none;background:transparent;font-size:0.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;cursor:pointer;font-family:inherit;padding:0;">
+                  ${MONTHS.map((m,mi)=>`<option value="${mi}" ${n.month==mi?'selected':''}>${m}</option>`).join('')}
+                </select>
+                <input type="number" value="${n.year}" onchange="updateNL(${i},'year',this.value)"
+                  style="width:46px;border:none;background:transparent;font-size:0.62rem;letter-spacing:2px;color:var(--muted);font-weight:600;font-family:inherit;padding:0;">
+              </div>
+              <input type="text" value="${n.title||''}" placeholder="Issue title…"
+                onchange="updateNL(${i},'title',this.value)"
+                style="font-size:1rem;font-weight:700;color:var(--espresso);border:none;background:transparent;font-family:inherit;width:100%;padding:0;">
+            </div>
+            <button onclick="deleteNL(${i})" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;flex-shrink:0;" title="Delete">✕</button>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <div style="font-size:0.62rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:5px;">Link or PDF URL</div>
+            <input type="text" value="${n.url||''}" placeholder="https://…"
+              onchange="updateNL(${i},'url',this.value)"
+              style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.82rem;font-family:inherit;color:var(--text);background:var(--cream);">
+          </div>
+
+          <div style="margin-bottom:12px;">
+            <input type="text" value="${n.notes||''}" placeholder="Notes or description…"
+              onchange="updateNL(${i},'notes',this.value)"
+              style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.82rem;font-family:inherit;color:var(--text);background:var(--cream);">
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+            <button onclick="updateNL(${i},'status',${JSON.stringify(n.status==='Draft'?'Published':'Draft')})"
+              style="background:${sc.bg};color:${sc.color};border:none;border-radius:999px;padding:5px 14px;font-size:0.73rem;font-weight:700;cursor:pointer;font-family:inherit;"
+              title="Click to toggle">${n.status}</button>
+            <div style="display:flex;gap:8px;">
+              ${n.url ? `<a href="${n.url}" target="_blank" class="card-link" style="padding:6px 12px;font-size:0.78rem;">Open →</a>` : ''}
+              <button onclick="copyLink('${n.url}')" ${!n.url?'disabled':''} style="
+                padding:6px 12px;background:${n.url?'var(--espresso)':'var(--border)'};
+                color:${n.url?'var(--cream)':'var(--muted)'};border:none;border-radius:8px;
+                font-size:0.78rem;font-weight:600;cursor:${n.url?'pointer':'default'};
+                font-family:inherit;transition:background 0.18s;">
+                📋 Copy Link
+              </button>
+            </div>
+          </div>
+        </div>`;
+      }).join('') + `</div>`;
+  }
+
+  // ── Init ─────────────────────────────────────────────
+  renderTasks();
+  renderDashMeeting();
+  updateStats();
+  buildMeetings();
+  renderGrowth();
+  renderCal();
+  renderNewsletters();
+</script>
+</body>
+</html>
