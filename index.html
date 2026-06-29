@@ -338,7 +338,7 @@
     <div id="tab-growth" class="tab-panel">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
         <p style="font-size:0.84rem;color:var(--muted);">Log your numbers each week. Growth is calculated automatically.</p>
-        <button class="btn-sm" onclick="addGrowthRow()">+ Log This Week</button>
+        <button class="btn-sm" onclick="addGrowthRow()">+ Add Entry</button>
       </div>
       <div class="cards-grid" style="margin-bottom:28px;">
         <div class="card" style="text-align:center"><div class="card-icon">📸</div><div class="card-title">Instagram</div><div id="gt-ig" style="font-size:1.8rem;font-weight:800;color:var(--espresso);margin:6px 0">—</div><div id="gd-ig" style="font-size:0.8rem;color:var(--muted)">followers</div></div>
@@ -750,7 +750,6 @@ function renderGrowthTotals(){
   document.getElementById('gt-li').textContent=l.linkedin||'—';document.getElementById('gd-li').textContent=`members${ds(d('linkedin'))}`;
   document.getElementById('gt-ss').textContent=l.substack||'—';document.getElementById('gd-ss').textContent=`subscribers${ds(d('substack'))}`;
   document.getElementById('gt-em').textContent=l.email_list||'—';document.getElementById('gd-em').textContent=`subscribers${ds(d('email_list'))}`;
-  document.getElementById('gt-mt').textContent=l.meeting_participants||'—';document.getElementById('gd-mt').textContent=`participants`;
 }
 function renderGrowth(){
   const sorted=[...growthCache].sort((a,b)=>a.week_of>b.week_of?1:-1);
