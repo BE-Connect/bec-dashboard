@@ -16,7 +16,12 @@
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;display:flex;}
 
-    .sidebar{width:var(--sidebar-w);min-height:100vh;background:var(--espresso);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;overflow-y:auto;}
+    .sidebar{width:var(--sidebar-w);height:100vh;background:var(--espresso);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;overflow-y:scroll;}
+    .sidebar::-webkit-scrollbar{width:4px;}
+    .sidebar::-webkit-scrollbar-track{background:transparent;}
+    .sidebar::-webkit-scrollbar-thumb{background:rgba(196,160,122,0.3);border-radius:4px;}
+    .sidebar::-webkit-scrollbar-thumb:hover{background:rgba(196,160,122,0.6);}
+    .sidebar-nav{padding:22px 0;flex:1;overflow:visible;}
     .sidebar-brand{padding:36px 28px 24px;border-bottom:1px solid rgba(255,255,255,0.07);}
     .sidebar-brand .eyebrow{font-size:0.65rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--tan);margin-bottom:8px;font-weight:500;}
     .sidebar-brand .brand-name{font-weight:900;font-size:1.25rem;color:var(--offwhite);line-height:1.2;}
@@ -121,8 +126,10 @@
     .meeting-header .week-date{font-size:0.85rem;color:rgba(255,255,255,0.45);margin-top:3px;}
     .meeting-toggle{background:none;border:none;color:var(--tan);font-size:1rem;cursor:pointer;}
     .meeting-body{display:none;padding:22px;}
-    .meeting-body.open{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
-    @media(max-width:700px){.meeting-body.open{grid-template-columns:1fr;}}
+    .meeting-body.open{display:flex;flex-direction:column;gap:22px;}
+    .meeting-notes-wide{width:100%;}
+    .meeting-actions-row{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+    @media(max-width:700px){.meeting-actions-row{grid-template-columns:1fr;}}
     .meeting-section h4{font-size:0.72rem;text-transform:uppercase;letter-spacing:1.6px;color:var(--muted);margin-bottom:10px;font-weight:700;}
     .meeting-textarea{width:100%;min-height:100px;padding:13px 15px;border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:1rem;line-height:1.6;resize:vertical;color:var(--text);background:var(--cream);transition:border-color 0.18s;}
     .meeting-textarea:focus{outline:none;border-color:var(--walnut);background:white;}
@@ -259,6 +266,9 @@
     <div class="founder-pill">
       <div class="founder-avatar">S&amp;C</div>
       <div><div class="founder-name">Cyn &amp; Shavonne</div><div class="founder-role">Co-Founders</div></div>
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);text-align:center;">
+      <button onclick="switchTab('changelog',this)" style="background:none;border:none;color:rgba(255,255,255,0.18);font-size:0.65rem;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;font-family:'Inter',sans-serif;transition:color 0.18s;" onmouseover="this.style.color='rgba(196,160,122,0.5)'" onmouseout="this.style.color='rgba(255,255,255,0.18)'">changelog</button>
     </div>
   </div>
 </aside>
@@ -414,6 +424,14 @@
       <div id="ideas-container"></div>
     </div>
 
+    <!-- CHANGELOG -->
+    <div id="tab-changelog" class="tab-panel">
+      <div style="max-width:680px;">
+        <p style="font-size:0.84rem;color:var(--muted);margin-bottom:28px;">A running log of updates to the BEC Control Center.</p>
+        <div id="changelog-entries"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -528,6 +546,7 @@ const TAB_TITLES={
   calendar:{title:'Content Calendar',sub:'Platform Planning'},
   newsletters:{title:'Newsletter Archive',sub:'PDF Library'},
   ideas:{title:'Ideas Parking Lot',sub:'Capture & Prioritize'},
+  changelog:{title:'Changelog',sub:'Update History'},
 };
 
 function switchTab(id,btn){
@@ -658,24 +677,30 @@ async function buildMeetings(){
         <button class="meeting-toggle" id="tg-m${mi}">${w.isNow?'▲':'▼'}</button>
       </div>
       <div class="meeting-body ${w.isNow?'open':''}" id="bd-m${mi}">
-        <div class="meeting-section">
-          <h4>Meeting Date</h4>
-          <input type="date" value="${meeting?.actual_date||key}" onchange="upsertMeeting('${key}',{actual_date:this.value})" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;font-family:inherit;background:var(--cream);color:var(--text);margin-bottom:14px;">
-          <h4>Meeting Notes</h4>
-          <textarea class="meeting-textarea" id="no-${key}" placeholder="Notes from this meeting…" onchange="upsertMeeting('${key}',{notes:this.value})">${meeting?.notes||''}</textarea>
-          <h4 style="margin-top:14px">Last Week's To-Dos</h4>
-          <ul class="past-todo-list" id="ptl-${key}"></ul>
-          <div class="past-todo-add-row">
-            <input class="add-action-input" id="pti-${key}" placeholder="Add a past to-do…" onkeydown="if(event.key==='Enter')addPastTodo('${key}')">
-            <button class="btn-sm" onclick="addPastTodo('${key}')">+ Add</button>
+        <div class="meeting-notes-wide">
+          <div class="meeting-section">
+            <h4>Meeting Date</h4>
+            <input type="date" value="${meeting?.actual_date||key}" onchange="upsertMeeting('${key}',{actual_date:this.value})" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;font-family:inherit;background:var(--cream);color:var(--text);margin-bottom:14px;">
+            <h4>Meeting Notes</h4>
+            <textarea class="meeting-textarea" id="no-${key}" placeholder="Notes from this meeting…" style="min-height:180px;" onchange="upsertMeeting('${key}',{notes:this.value})">${meeting?.notes||''}</textarea>
           </div>
         </div>
-        <div class="meeting-section">
-          <h4>New Action Items</h4>
-          <ul class="action-list" id="al-${key}"></ul>
-          <div class="add-action-row">
-            <input class="add-action-input" id="ai-${key}" placeholder="Add an action item…" onkeydown="if(event.key==='Enter')addAI('${key}')">
-            <button class="btn-sm" onclick="addAI('${key}')">+ Add</button>
+        <div class="meeting-actions-row">
+          <div class="meeting-section">
+            <h4>Last Week's To-Dos</h4>
+            <ul class="past-todo-list" id="ptl-${key}"></ul>
+            <div class="past-todo-add-row">
+              <input class="add-action-input" id="pti-${key}" placeholder="Add a past to-do…" onkeydown="if(event.key==='Enter')addPastTodo('${key}')">
+              <button class="btn-sm" onclick="addPastTodo('${key}')">+ Add</button>
+            </div>
+          </div>
+          <div class="meeting-section">
+            <h4>New Action Items</h4>
+            <ul class="action-list" id="al-${key}"></ul>
+            <div class="add-action-row">
+              <input class="add-action-input" id="ai-${key}" placeholder="Add an action item…" onkeydown="if(event.key==='Enter')addAI('${key}')">
+              <button class="btn-sm" onclick="addAI('${key}')">+ Add</button>
+            </div>
           </div>
         </div>
       </div>
@@ -841,11 +866,22 @@ function filterCal(p){calFilter=p;document.querySelectorAll('#cal-filters .filte
 function renderCal(){
   const rows=calCache.filter(r=>calFilter==='All'||r.platform===calFilter);
   const PC={'Instagram':'#7A2010','LinkedIn':'#1A3A5A','Substack':'#5A2E0A','Website':'#1E4A30'};
+  const PLATFORMS=['Instagram','LinkedIn','Substack','Website'];
   document.getElementById('cal-body').innerHTML=rows.map(r=>{
     const sc=CAL_STATUS_COLORS[r.status]||{bg:'#ede8e2',color:'#4a3828'};
+    const platforms=r.platform?r.platform.split(',').map(p=>p.trim()):[];
+    const chips=platforms.map(p=>`<span class="area-chip" style="background:${PC[p]||'#3A200E'};margin-right:3px;">${p}</span>`).join('');
+    const platformChecks=PLATFORMS.map(p=>`<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:0.82rem;cursor:pointer;"><input type="checkbox" ${platforms.includes(p)?'checked':''} onchange="updateCalPlatforms('${r.id}',this)" data-platform="${p}" style="accent-color:var(--walnut);"> ${p}</label>`).join('');
     return `<tr>
       <td><input type="date" value="${r.post_date||''}" onchange="updateCal('${r.id}','post_date',this.value)" style="border:none;background:transparent;font-family:inherit;font-size:0.85rem;color:var(--text);width:120px"></td>
-      <td><span class="area-chip" style="background:${PC[r.platform]||'#3A200E'}">${r.platform}</span></td>
+      <td>
+        <div style="position:relative;display:inline-block;">
+          <div onclick="togglePlatformPicker('pp-${r.id}')" style="cursor:pointer;min-width:100px;">${chips||'<span style="color:var(--muted);font-size:0.82rem;">Select…</span>'}</div>
+          <div id="pp-${r.id}" style="display:none;position:absolute;top:100%;left:0;z-index:50;background:white;border:1px solid var(--border);border-radius:10px;padding:10px 14px;box-shadow:0 4px 16px rgba(30,15,5,0.12);min-width:140px;">
+            ${platformChecks}
+          </div>
+        </div>
+      </td>
       <td style="font-size:0.82rem;color:var(--muted)">${r.type}</td>
       <td><input class="inline-edit" value="${(r.title||'').replace(/"/g,'&quot;')}" placeholder="Title or topic…" onchange="updateCal('${r.id}','title',this.value)" style="min-width:160px;"></td>
       <td><select class="owner-select" onchange="updateCal('${r.id}','owner',this.value)"><option ${r.owner==='Shavonne'?'selected':''}>Shavonne</option><option ${r.owner==='Cynthia'?'selected':''}>Cynthia</option><option ${r.owner==='Both'?'selected':''}>Both</option></select></td>
@@ -854,6 +890,20 @@ function renderCal(){
       <td><button onclick="deleteCalRow('${r.id}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem">✕</button></td>
     </tr>`;
   }).join('');
+}
+function togglePlatformPicker(id){
+  const el=document.getElementById(id);
+  const isOpen=el.style.display==='block';
+  document.querySelectorAll('[id^="pp-"]').forEach(e=>e.style.display='none');
+  el.style.display=isOpen?'none':'block';
+}
+document.addEventListener('click',e=>{if(!e.target.closest('[id^="pp-"]')&&!e.target.closest('[onclick*="togglePlatformPicker"]'))document.querySelectorAll('[id^="pp-"]').forEach(el=>el.style.display='none');});
+async function updateCalPlatforms(id,checkbox){
+  const picker=checkbox.closest('[id^="pp-"]');
+  const checked=[...picker.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.dataset.platform);
+  const val=checked.join(', ');
+  await updateCal(id,'platform',val||'Instagram');
+  await loadCal();renderCal();
 }
 
 // ══ NEWSLETTER ARCHIVE ════════════════════════════════════
@@ -926,6 +976,50 @@ function renderIdeas(){
   }).join('');
 }
 
+// ══ CHANGELOG ═══════════════════════════════════════════
+const CHANGELOG=[
+  {date:'July 2025',entries:[
+    'Added Meeting Attendance tracker to Community Growth tab',
+    'Meeting date field added to Weekly Meetings — defaults to Saturday, editable',
+    'Push to Next Week button added to meeting action items',
+    'Delete buttons added to meeting action items and past to-dos',
+    'PIN now remembered across page refreshes (no more re-entering on reload)',
+    'Tab title bar added — shows current section as you navigate',
+    'Stat chips (Total Tasks, In Progress, Done) now filter Action Items on click',
+    'Notes editable inline in Action Items and Content Calendar',
+    'Owner dropdown added everywhere owner appears',
+    'Content Calendar platform field supports multiple platform selection',
+    'Sidebar scrollbar added',
+    'Community Growth chart added — builds automatically as you log data',
+    '"+ Add Entry" replaces "Log This Week" to allow backdating',
+    'Meeting Attendance section added to Community Growth',
+    'Changelog added (you are here)',
+  ]},
+  {date:'June 2025',entries:[
+    'Backend connected — all data now saves to Supabase database',
+    'Both founders can access dashboard simultaneously from any device',
+    'Ideas Parking Lot added with stoplight system (⚪🟡🟢🔴)',
+    'Promote to Action Items button added to Ideas Parking Lot',
+    'Action Items fully dynamic — add new tasks, delete existing ones',
+    'Manage Areas — add, rename, or remove work areas as BEC grows',
+    'Newsletter Archive updated to Google Drive PDF links',
+    'Last Week\'s To-Dos converted from text box to checkbox list',
+    'Attendees field removed from Weekly Meetings',
+    'Trello removed — dashboard handles task management directly',
+    'Font changed to Inter throughout',
+    'Dashboard renamed from Command Center to Control Center',
+  ]},
+];
+
+function renderChangelog(){
+  const el=document.getElementById('changelog-entries');if(!el)return;
+  el.innerHTML=CHANGELOG.map(section=>`
+    <div style="margin-bottom:32px;">
+      <div style="font-size:0.65rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:12px;">${section.date}<span style="flex:1;height:1px;background:var(--border);display:inline-block;"></span></div>
+      ${section.entries.map(e=>`<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f0ebe2;font-size:0.88rem;line-height:1.5;"><span style="color:var(--tan);flex-shrink:0;margin-top:2px;">✦</span><span>${e}</span></div>`).join('')}
+    </div>`).join('');
+}
+
 // ══ INIT ════════════════════════════════════════════════
 async function init(){
   document.getElementById('tasks-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted);">Loading…</td></tr>';
@@ -933,7 +1027,7 @@ async function init(){
   rebuildAreaFilters();renderDashAreas();renderTasks();updateStats();
   await renderDashMeeting();
   await buildMeetings();
-  renderGrowth();renderCal();renderNewsletters();renderIdeas();renderAttendance();
+  renderGrowth();renderCal();renderNewsletters();renderIdeas();renderAttendance();renderChangelog();
 }
 init();
 </script>
