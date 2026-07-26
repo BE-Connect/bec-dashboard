@@ -750,7 +750,7 @@ async function renderDashMeeting(){
       <textarea class="meeting-textarea" style="min-height:80px;font-size:0.875rem;" placeholder="What do you want to cover next week…" onchange="upsertMeeting('${nextKey}',{notes:this.value})">${nextMeeting?.notes||''}</textarea>
     </div>
   </div>
-  <p style="font-size:0.78rem;color:var(--muted);">✦ Saturday is your meeting day. View full history in <strong><a href="#" onclick="switchTab('meetings',document.querySelector('[onclick*=meetings]'));return false;" style="color:var(--walnut);text-decoration:underline;">Weekly Meetings</a></strong>.</p>`;
+
 }
 
 // ══ COMMUNITY GROWTH ════════════════════════════════════
