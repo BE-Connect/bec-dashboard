@@ -646,9 +646,10 @@ function updateStats(){
 
 // ══ MEETINGS ════════════════════════════════════════════
 function sunday(d){const dt=new Date(d),day=dt.getDay();dt.setDate(dt.getDate()-day);return dt;}
-function weekKey(d){return sunday(d).toISOString().slice(0,10);}
+function toLocalDateStr(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`;}
+function weekKey(d){return toLocalDateStr(sunday(d));}
 function fmt(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
-function nextWeekKey(weekKey){const d=new Date(weekKey+'T00:00:00');d.setDate(d.getDate()+7);return d.toISOString().slice(0,10);}
+function nextWeekKey(wk){const d=new Date(wk+'T12:00:00');d.setDate(d.getDate()+7);return toLocalDateStr(d);}
 
 async function getMeeting(k){const{data}=await sb.from('meetings').select('*').eq('week_key',k).maybeSingle();return data;}
 async function upsertMeeting(k,fields){const{error}=await sb.from('meetings').upsert({week_key:k,...fields},{onConflict:'week_key'});if(error)showError('Could not save');else showSave();}
@@ -659,14 +660,14 @@ async function buildMeetings(){
   const c=document.getElementById('meetings-container');
   const sun=sunday(new Date());
   const weeks=[0,-1,-2,-3,-4,-5,-6,-7,1,2,3].map(i=>{const d=new Date(sun);d.setDate(d.getDate()+i*7);return{date:new Date(d),upcoming:i>0,isNow:i===0};});
-  const weekKeys=weeks.map(w=>w.date.toISOString().slice(0,10));
+  const weekKeys=weeks.map(w=>toLocalDateStr(w.date));
   const meetingData={};
   for(const key of weekKeys){
     const[m,actions,todos]=await Promise.all([getMeeting(key),getMeetingActions(key),getMeetingPastTodos(key)]);
     meetingData[key]={meeting:m,actions,todos};
   }
   c.innerHTML=weeks.map((w,mi)=>{
-    const key=w.date.toISOString().slice(0,10);
+    const key=toLocalDateStr(w.date);
     const{meeting}=meetingData[key];
     const badge=w.upcoming?'<span class="upcoming-badge">Upcoming</span>':'';
     const lbl=w.isNow?'📍 This Week':(w.upcoming?'Future':'Past');
@@ -759,9 +760,9 @@ function renderAL(key,actions){
 
 async function renderDashMeeting(){
   const el=document.getElementById('dash-meeting-preview');if(!el)return;
-  const sun=sunday(new Date());const key=sun.toISOString().slice(0,10);
+  const sun=sunday(new Date());const key=toLocalDateStr(sun);
   const nextSun=new Date(sun);nextSun.setDate(nextSun.getDate()+7);
-  const nextKey=nextSun.toISOString().slice(0,10);
+  const nextKey=toLocalDateStr(nextSun);
   const[actions,nextMeeting]=await Promise.all([getMeetingActions(key),getMeeting(nextKey)]);
   el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
     <div class="card">
