@@ -557,6 +557,7 @@ function switchTab(id,btn){
   const sb2=document.getElementById('sidebar');
   if(sb2.classList.contains('open'))toggleSidebar();
   if(id==='growth')setTimeout(renderGrowthChart,100);
+  if(id==='meetings')buildMeetings();
   // Update page title
   const t=TAB_TITLES[id]||{title:id,sub:''};
   document.getElementById('page-title-text').textContent=t.title;
@@ -644,7 +645,8 @@ function updateStats(){
 }
 
 // ══ MEETINGS ════════════════════════════════════════════
-function saturday(d){const dt=new Date(d),day=dt.getDay();dt.setDate(dt.getDate()+(day>=6?0:-(day+1)));return dt;}
+function sunday(d){const dt=new Date(d),day=dt.getDay();dt.setDate(dt.getDate()-day);return dt;}
+function weekKey(d){return sunday(d).toISOString().slice(0,10);}
 function fmt(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
 function nextWeekKey(weekKey){const d=new Date(weekKey+'T00:00:00');d.setDate(d.getDate()+7);return d.toISOString().slice(0,10);}
 
@@ -655,8 +657,8 @@ async function getMeetingPastTodos(k){const{data}=await sb.from('meeting_past_to
 
 async function buildMeetings(){
   const c=document.getElementById('meetings-container');
-  const sat=saturday(new Date());
-  const weeks=[0,-1,-2,-3,-4,-5,-6,-7,1,2,3].map(i=>{const d=new Date(sat);d.setDate(d.getDate()+i*7);return{date:new Date(d),upcoming:i>0,isNow:i===0};});
+  const sun=sunday(new Date());
+  const weeks=[0,-1,-2,-3,-4,-5,-6,-7,1,2,3].map(i=>{const d=new Date(sun);d.setDate(d.getDate()+i*7);return{date:new Date(d),upcoming:i>0,isNow:i===0};});
   const weekKeys=weeks.map(w=>w.date.toISOString().slice(0,10));
   const meetingData={};
   for(const key of weekKeys){
@@ -688,6 +690,7 @@ async function buildMeetings(){
         <div class="meeting-actions-row">
           <div class="meeting-section">
             <h4>Last Week's To-Dos</h4>
+            <p style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;font-style:italic;">Didn't finish during the week? Use → Next Week to carry it forward.</p>
             <ul class="past-todo-list" id="ptl-${key}"></ul>
             <div class="past-todo-add-row">
               <input class="add-action-input" id="pti-${key}" placeholder="Add a past to-do…" onkeydown="if(event.key==='Enter')addPastTodo('${key}')">
@@ -722,11 +725,33 @@ async function pushToNextWeek(text,key){const nk=nextWeekKey(key);const{error}=a
 
 async function deleteAI(id,key){await sb.from('meeting_actions').delete().eq('id',id);renderAL(key,await getMeetingActions(key));showSave();}
 
+async function updateAIText(id,key,val){await sb.from('meeting_actions').update({text:val}).eq('id',id);showSave();}
+async function updateAIOwner(id,key,val){await sb.from('meeting_actions').update({owner:val}).eq('id',id);showSave();}
+
+let meetingOwnerFilter={};
+function setMeetingOwnerFilter(key,val){
+  meetingOwnerFilter[key]=val;
+  getMeetingActions(key).then(actions=>renderAL(key,actions));
+}
+
 function renderAL(key,actions){
   const ul=document.getElementById('al-'+key);if(!ul)return;
-  ul.innerHTML=actions.map(a=>`<li>
+  const f=meetingOwnerFilter[key]||'All';
+  const filtered=f==='All'?actions:actions.filter(a=>a.owner===f);
+  // Filter chips
+  const chips=`<div style="display:flex;gap:6px;margin-bottom:10px;">
+    <button onclick="setMeetingOwnerFilter('${key}','All')" style="padding:4px 12px;border-radius:999px;border:1px solid var(--border);background:${f==='All'?'var(--espresso)':'var(--card)'};color:${f==='All'?'var(--cream)':'var(--muted)'};font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;">All</button>
+    <button onclick="setMeetingOwnerFilter('${key}','Shavonne')" style="padding:4px 12px;border-radius:999px;border:1px solid var(--border);background:${f==='Shavonne'?'var(--espresso)':'var(--card)'};color:${f==='Shavonne'?'var(--cream)':'var(--muted)'};font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;">SM</button>
+    <button onclick="setMeetingOwnerFilter('${key}','Cynthia')" style="padding:4px 12px;border-radius:999px;border:1px solid var(--border);background:${f==='Cynthia'?'var(--espresso)':'var(--card)'};color:${f==='Cynthia'?'var(--cream)':'var(--muted)'};font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;">CW</button>
+  </div>`;
+  ul.innerHTML=chips+filtered.map(a=>`<li style="flex-wrap:wrap;gap:6px;">
     <input type="checkbox" class="task-check" ${a.done?'checked':''} onchange="togAI('${a.id}','${key}')">
-    <span style="flex:1;${a.done?'text-decoration:line-through;color:var(--muted)':''}">${a.text}</span>
+    <input class="inline-edit" value="${(a.text||'').replace(/"/g,'&quot;')}" placeholder="Action item…" onchange="updateAIText('${a.id}','${key}',this.value)" style="${a.done?'text-decoration:line-through;color:var(--muted);':''}flex:1;min-width:120px;">
+    <select onchange="updateAIOwner('${a.id}','${key}',this.value)" style="border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:0.72rem;font-family:inherit;background:var(--cream);cursor:pointer;">
+      <option value="" ${!a.owner?'selected':''}>—</option>
+      <option value="Shavonne" ${a.owner==='Shavonne'?'selected':''}>SM</option>
+      <option value="Cynthia" ${a.owner==='Cynthia'?'selected':''}>CW</option>
+    </select>
     <button class="push-btn" onclick="pushToNextWeek('${a.text.replace(/'/g,"\\'")}','${key}')" title="Push to next week">→ Next Week</button>
     <button onclick="deleteAI('${a.id}','${key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:0 4px;" title="Delete">✕</button>
   </li>`).join('');
@@ -734,18 +759,18 @@ function renderAL(key,actions){
 
 async function renderDashMeeting(){
   const el=document.getElementById('dash-meeting-preview');if(!el)return;
-  const sat=saturday(new Date());const key=sat.toISOString().slice(0,10);
-  const nextSat=new Date(sat);nextSat.setDate(nextSat.getDate()+7);
-  const nextKey=nextSat.toISOString().slice(0,10);
+  const sun=sunday(new Date());const key=sun.toISOString().slice(0,10);
+  const nextSun=new Date(sun);nextSun.setDate(nextSun.getDate()+7);
+  const nextKey=nextSun.toISOString().slice(0,10);
   const[actions,nextMeeting]=await Promise.all([getMeetingActions(key),getMeeting(nextKey)]);
   el.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
     <div class="card">
-      <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">This Saturday · ${fmt(sat)}</div>
+      <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">This Week · ${fmt(sun)}</div>
       <div style="font-size:0.82rem;font-weight:600;color:var(--espresso);margin-bottom:10px;">Action Items</div>
-      ${actions.length?`<ul class="action-list">${actions.map(a=>`<li><input type="checkbox" class="task-check" ${a.done?'checked':''} onchange="togAI('${a.id}','${key}')"><span style="${a.done?'text-decoration:line-through;color:var(--muted)':''}">${a.text}</span></li>`).join('')}</ul>`:`<p style="font-size:0.82rem;color:var(--muted);font-style:italic;">No action items yet.</p>`}
+      ${actions.length?`<ul class="action-list">${actions.map(a=>`<li><input type="checkbox" class="task-check" ${a.done?'checked':''} onchange="togAI('${a.id}','${key}')"><span style="${a.done?'text-decoration:line-through;color:var(--muted)':''}">${a.text}</span>${a.owner?`<span style="font-size:0.7rem;color:var(--muted);margin-left:auto;">${a.owner==='Shavonne'?'SM':'CW'}</span>`:''}</li>`).join('')}</ul>`:`<p style="font-size:0.82rem;color:var(--muted);font-style:italic;">No action items yet.</p>`}
     </div>
     <div class="card">
-      <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">Next Saturday · ${fmt(nextSat)}</div>
+      <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">Next Week · ${fmt(nextSun)}</div>
       <div style="font-size:0.82rem;font-weight:600;color:var(--espresso);margin-bottom:10px;">Agenda / Topics</div>
       <textarea class="meeting-textarea" style="min-height:80px;font-size:0.875rem;" placeholder="What do you want to cover next week…" onchange="upsertMeeting('${nextKey}',{notes:this.value})">${nextMeeting?.notes||''}</textarea>
     </div>
