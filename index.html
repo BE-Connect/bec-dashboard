@@ -164,6 +164,9 @@
     .sl-no{background:#f8d7da;color:#721c24;}
     .idea-text-input{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:9px;font-size:0.93rem;font-family:'Inter',sans-serif;color:var(--text);background:var(--cream);resize:vertical;min-height:60px;}
     .idea-text-input:focus{outline:none;border-color:var(--walnut);}
+    .link-view{white-space:pre-wrap;overflow-wrap:anywhere;cursor:text;}
+    .link-view:focus{outline:none;}
+    .link-view a,.action-list a{color:var(--walnut);text-decoration:underline;word-break:break-all;}
     .promote-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 12px;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;color:var(--muted);transition:all 0.18s;}
     .promote-btn:hover{background:var(--espresso);color:var(--cream);border-color:var(--espresso);}
 
@@ -254,7 +257,7 @@
     <a class="nav-item" href="https://drive.google.com/drive/folders/1T6YxHsW9QfC9BMvAk0C828anvLD3j4O7?usp=drive_link" target="_blank"><span class="nav-icon">📁</span> Google Drive</a>
     <a class="nav-item" href="https://us15.admin.mailchimp.com" target="_blank"><span class="nav-icon">📣</span> Mailchimp</a>
     <a class="nav-item" href="https://mail.google.com" target="_blank"><span class="nav-icon">📧</span> Gmail</a>
-    <a class="nav-item" href="https://calendar.google.com" target="_blank"><span class="nav-icon">🗓</span> Calendar</a>
+    <a class="nav-item" id="nav-calendar" href="https://calendar.google.com" target="_blank" rel="noopener noreferrer"><span class="nav-icon">🗓</span> Calendar</a>
     <a class="nav-item" href="https://us06web.zoom.us/j/85303812707?pwd=OyN4g9FaM3QimPKkXmBRUtUqJ0luLn.1" target="_blank"><span class="nav-icon">📹</span> Zoom</a>
     <div class="nav-label" style="margin-top:10px">Social</div>
     <a class="nav-item" href="https://instagram.com/BlackEditorsConnect" target="_blank"><span class="nav-icon">📸</span> Instagram</a>
@@ -421,6 +424,10 @@
         <button class="btn-sm" onclick="addIdea()">+ New Idea</button>
       </div>
       <div style="margin-bottom:20px;font-size:0.78rem;color:var(--muted);">⚪ New &nbsp;·&nbsp; 🟡 Maybe &nbsp;·&nbsp; 🟢 Yes &nbsp;·&nbsp; 🔴 No</div>
+      <div id="idea-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="filter-btn active" data-f="all" onclick="filterIdeas('all')">All Ideas</button>
+        <button class="filter-btn" data-f="member" onclick="filterIdeas('member')">Member Ideas</button>
+      </div>
       <div id="ideas-container"></div>
     </div>
 
@@ -497,7 +504,7 @@
 </div>
 
 <!-- LOCK SCREEN -->
-<div id="lock-screen" style="display:none;position:fixed;inset:0;background:var(--espresso);background-image:radial-gradient(ellipse at 30% 60%,rgba(196,160,122,0.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(107,60,30,0.2) 0%,transparent 55%);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Inter',sans-serif;">
+<div id="lock-screen" style="display:none;position:fixed;inset:0;background:var(--espresso);background-image:radial-gradient(ellipse at 30% 60%,rgba(196,160,122,0.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(107,60,30,0.2) 0%,transparent 55%);z-index:9999;flex-direction:column;align-items:center;justify-content:center;font-family:'Inter',sans-serif;">
   <div style="text-align:center;max-width:340px;width:90%;padding:20px;">
     <div style="font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;color:var(--tan);margin-bottom:16px;font-weight:600;">Control Center</div>
     <div style="font-weight:900;font-size:2rem;color:var(--cream);line-height:1.1;margin-bottom:6px;">Black Editors<br><span style="font-weight:300;color:var(--tan);">Connect</span></div>
@@ -519,6 +526,13 @@
 const SUPABASE_URL='https://akoouvnfseiffuosqwnf.supabase.co';
 const SUPABASE_KEY='sb_publishable_6SNjpR1s7jn1Sou72GKO0g__acX1cPR';
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// ══ DASHBOARD SETTINGS ══════════════════════════════════
+// Links that may change over time. Update them here; no other code needs to change.
+const MEETING_DOC_URL='https://docs.google.com/document/d/1SSlaZiOA53l-YEjTg8AL7GB91NrfPO15t1hWprnX6Vw/edit?usp=sharing'; // Members' meeting notes Google Doc (shown on every week's card)
+const CALENDAR_ID='blackeditorsgroup@gmail.com'; // Black Editors Content Calendar (Google Calendar > Settings and sharing > Integrate calendar)
+// No account number in the link, so Google opens it under whichever signed-in account has access.
+document.getElementById('nav-calendar').href='https://calendar.google.com/calendar/r?cid='+encodeURIComponent(CALENDAR_ID);
 
 function showSave(){const bar=document.getElementById('save-bar');bar.textContent='✦ Saved';bar.style.background='';bar.classList.add('show');clearTimeout(window._st);window._st=setTimeout(()=>bar.classList.remove('show'),2000);}
 function showError(msg){const bar=document.getElementById('save-bar');bar.textContent='⚠ '+msg;bar.style.background='#6a1a10';bar.classList.add('show');clearTimeout(window._st);window._st=setTimeout(()=>{bar.classList.remove('show');bar.textContent='✦ Saved';bar.style.background='';},4000);}
@@ -661,6 +675,7 @@ async function buildMeetings(){
   const sun=sunday(new Date());
   const weeks=[0,-1,-2,-3,-4,-5,-6,-7,1,2,3].map(i=>{const d=new Date(sun);d.setDate(d.getDate()+i*7);return{date:new Date(d),upcoming:i>0,isNow:i===0};});
   const weekKeys=weeks.map(w=>toLocalDateStr(w.date));
+  renderedWeekKeys=weekKeys;
   const meetingData={};
   for(const key of weekKeys){
     const[m,actions,todos]=await Promise.all([getMeeting(key),getMeetingActions(key),getMeetingPastTodos(key)]);
@@ -683,9 +698,11 @@ async function buildMeetings(){
         <div class="meeting-notes-wide">
           <div class="meeting-section">
             <h4>Meeting Date</h4>
-            <input type="date" value="${meeting?.actual_date||key}" onchange="upsertMeeting('${key}',{actual_date:this.value})" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;font-family:inherit;background:var(--cream);color:var(--text);margin-bottom:14px;">
+            <input type="date" id="md-${key}" value="${meeting?.actual_date||key}" onchange="upsertMeeting('${key}',{actual_date:this.value})" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem;font-family:inherit;background:var(--cream);color:var(--text);margin-bottom:14px;">
+            <h4>Members' Meeting Doc</h4>
+            <a href="${MEETING_DOC_URL}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-bottom:14px;color:var(--walnut);text-decoration:underline;font-size:0.9rem;">Open meeting notes in Google Docs ↗</a>
             <h4>Meeting Notes</h4>
-            <textarea class="meeting-textarea" id="no-${key}" placeholder="Notes from this meeting…" style="min-height:180px;" onchange="upsertMeeting('${key}',{notes:this.value})">${meeting?.notes||''}</textarea>
+            <textarea class="meeting-textarea" data-links id="no-${key}" placeholder="Notes from this meeting…" style="min-height:360px;" onchange="upsertMeeting('${key}',{notes:this.value})">${meeting?.notes||''}</textarea>
           </div>
         </div>
         <div class="meeting-actions-row">
@@ -718,7 +735,7 @@ function tog(id){const b=document.getElementById('bd-'+id),t=document.getElement
 async function addPastTodo(key){const inp=document.getElementById('pti-'+key);const val=inp.value.trim();if(!val)return;const{error}=await sb.from('meeting_past_todos').insert({week_key:key,text:val,done:false});if(error){showError('Could not save');return;}inp.value='';renderPastTodos(key,await getMeetingPastTodos(key));showSave();}
 async function togPastTodo(id,key){const{data}=await sb.from('meeting_past_todos').select('done').eq('id',id).single();if(!data)return;await sb.from('meeting_past_todos').update({done:!data.done}).eq('id',id);renderPastTodos(key,await getMeetingPastTodos(key));showSave();}
 async function deletePastTodo(id,key){await sb.from('meeting_past_todos').delete().eq('id',id);renderPastTodos(key,await getMeetingPastTodos(key));showSave();}
-function renderPastTodos(key,todos){const ul=document.getElementById('ptl-'+key);if(!ul)return;ul.innerHTML=todos.map(t=>`<li><input type="checkbox" class="task-check" ${t.done?'checked':''} onchange="togPastTodo('${t.id}','${key}')"><span style="flex:1;${t.done?'text-decoration:line-through;color:var(--muted)':''}"> ${t.text}</span><button onclick="deletePastTodo('${t.id}','${key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:0 4px;" title="Delete">✕</button></li>`).join('');}
+function renderPastTodos(key,todos){const ul=document.getElementById('ptl-'+key);if(!ul)return;ul.innerHTML=todos.map(t=>`<li><input type="checkbox" class="task-check" ${t.done?'checked':''} onchange="togPastTodo('${t.id}','${key}')"><span style="flex:1;${t.done?'text-decoration:line-through;color:var(--muted)':''}"> ${linkify(t.text)}</span><button onclick="deletePastTodo('${t.id}','${key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:0 4px;" title="Delete">✕</button></li>`).join('');}
 
 async function addAI(key){const inp=document.getElementById('ai-'+key);const val=inp.value.trim();if(!val)return;const{error}=await sb.from('meeting_actions').insert({week_key:key,text:val,done:false});if(error){showError('Could not save');return;}inp.value='';renderAL(key,await getMeetingActions(key));showSave();}
 async function togAI(id,key){const{data}=await sb.from('meeting_actions').select('done').eq('id',id).single();if(!data)return;await sb.from('meeting_actions').update({done:!data.done}).eq('id',id);renderAL(key,await getMeetingActions(key));renderDashMeeting();showSave();}
@@ -738,20 +755,21 @@ function setMeetingOwnerFilter(key,val){
 function renderAL(key,actions){
   const ul=document.getElementById('al-'+key);if(!ul)return;
   const f=meetingOwnerFilter[key]||'All';
-  const filtered=f==='All'?actions:actions.filter(a=>a.owner===f);
+  const filtered=f==='All'?actions:actions.filter(a=>a.owner===f||a.owner==='Both');
   // Filter chips
   const chips=`<div style="display:flex;gap:6px;margin-bottom:10px;">
-    <button onclick="setMeetingOwnerFilter('${key}','All')" style="padding:4px 12px;border-radius:999px;border:1px solid var(--border);background:${f==='All'?'var(--espresso)':'var(--card)'};color:${f==='All'?'var(--cream)':'var(--muted)'};font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;">All</button>
+    <button onclick="setMeetingOwnerFilter('${key}','All')" style="padding:4px 12px;border-radius:999px;border:1px solid var(--border);background:${f==='All'?'var(--espresso)':'var(--card)'};color:${f==='All'?'var(--cream)':'var(--muted)'};font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;">Both</button>
     <button onclick="setMeetingOwnerFilter('${key}','Shavonne')" style="padding:4px 12px;border-radius:999px;border:1px solid var(--border);background:${f==='Shavonne'?'var(--espresso)':'var(--card)'};color:${f==='Shavonne'?'var(--cream)':'var(--muted)'};font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;">SM</button>
     <button onclick="setMeetingOwnerFilter('${key}','Cynthia')" style="padding:4px 12px;border-radius:999px;border:1px solid var(--border);background:${f==='Cynthia'?'var(--espresso)':'var(--card)'};color:${f==='Cynthia'?'var(--cream)':'var(--muted)'};font-size:0.72rem;font-weight:600;cursor:pointer;font-family:inherit;">CW</button>
   </div>`;
   ul.innerHTML=chips+filtered.map(a=>`<li style="flex-wrap:wrap;gap:6px;">
     <input type="checkbox" class="task-check" ${a.done?'checked':''} onchange="togAI('${a.id}','${key}')">
-    <input class="inline-edit" value="${(a.text||'').replace(/"/g,'&quot;')}" placeholder="Action item…" onchange="updateAIText('${a.id}','${key}',this.value)" style="${a.done?'text-decoration:line-through;color:var(--muted);':''}flex:1;min-width:120px;">
+    <input class="inline-edit" data-links value="${(a.text||'').replace(/"/g,'&quot;')}" placeholder="Action item…" onchange="updateAIText('${a.id}','${key}',this.value)" style="${a.done?'text-decoration:line-through;color:var(--muted);':''}flex:1;min-width:120px;">
     <select onchange="updateAIOwner('${a.id}','${key}',this.value)" style="border:1px solid var(--border);border-radius:6px;padding:3px 6px;font-size:0.72rem;font-family:inherit;background:var(--cream);cursor:pointer;">
       <option value="" ${!a.owner?'selected':''}>—</option>
       <option value="Shavonne" ${a.owner==='Shavonne'?'selected':''}>SM</option>
       <option value="Cynthia" ${a.owner==='Cynthia'?'selected':''}>CW</option>
+      <option value="Both" ${a.owner==='Both'?'selected':''}>Both</option>
     </select>
     <button class="push-btn" onclick="pushToNextWeek('${a.text.replace(/'/g,"\\'")}','${key}')" title="Push to next week">→ Next Week</button>
     <button onclick="deleteAI('${a.id}','${key}')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:0 4px;" title="Delete">✕</button>
@@ -768,12 +786,12 @@ async function renderDashMeeting(){
     <div class="card">
       <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">This Week · ${fmt(sun)}</div>
       <div style="font-size:0.82rem;font-weight:600;color:var(--espresso);margin-bottom:10px;">Action Items</div>
-      ${actions.length?`<ul class="action-list">${actions.map(a=>`<li><input type="checkbox" class="task-check" ${a.done?'checked':''} onchange="togAI('${a.id}','${key}')"><span style="${a.done?'text-decoration:line-through;color:var(--muted)':''}">${a.text}</span>${a.owner?`<span style="font-size:0.7rem;color:var(--muted);margin-left:auto;">${a.owner==='Shavonne'?'SM':'CW'}</span>`:''}</li>`).join('')}</ul>`:`<p style="font-size:0.82rem;color:var(--muted);font-style:italic;">No action items yet.</p>`}
+      ${actions.length?`<ul class="action-list">${actions.map(a=>`<li><input type="checkbox" class="task-check" ${a.done?'checked':''} onchange="togAI('${a.id}','${key}')"><span style="${a.done?'text-decoration:line-through;color:var(--muted)':''}">${linkify(a.text)}</span>${a.owner?`<span style="font-size:0.7rem;color:var(--muted);margin-left:auto;">${a.owner==='Shavonne'?'SM':a.owner==='Cynthia'?'CW':a.owner}</span>`:''}</li>`).join('')}</ul>`:`<p style="font-size:0.82rem;color:var(--muted);font-style:italic;">No action items yet.</p>`}
     </div>
     <div class="card">
       <div style="font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">Next Week · ${fmt(nextSun)}</div>
       <div style="font-size:0.82rem;font-weight:600;color:var(--espresso);margin-bottom:10px;">Agenda / Topics</div>
-      <textarea class="meeting-textarea" style="min-height:80px;font-size:0.875rem;" placeholder="What do you want to cover next week…" onchange="upsertMeeting('${nextKey}',{notes:this.value})">${nextMeeting?.notes||''}</textarea>
+      <textarea class="meeting-textarea" data-links style="min-height:80px;font-size:0.875rem;" placeholder="What do you want to cover next week…" onchange="upsertMeeting('${nextKey}',{notes:this.value})">${nextMeeting?.notes||''}</textarea>
     </div>
   </div>
   `;
@@ -978,32 +996,52 @@ let ideasCache=[];
 const SL_CYCLE=['new','maybe','yes','no'];
 const SL_CFG={new:{label:'⚪ New',cls:'sl-new'},maybe:{label:'🟡 Maybe',cls:'sl-maybe'},yes:{label:'🟢 Yes',cls:'sl-yes'},no:{label:'🔴 No',cls:'sl-no'}};
 async function loadIdeas(){const{data,error}=await sb.from('ideas').select('*').order('sort_order').order('created_at',{ascending:false});if(error){showError('Could not load ideas');return[];}ideasCache=data;return data;}
-async function addIdea(){const date=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});const{error}=await sb.from('ideas').insert({text:'',who:'Shavonne',added_date:date,status:'new'});if(error){showError('Could not add idea');return;}await loadIdeas();renderIdeas();}
+async function addIdea(){const date=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});const{error}=await sb.from('ideas').insert({text:'',who:'Shavonne',added_date:date,status:'new'});if(error){showError('Could not add idea');return;}await loadIdeas();if(ideaFilter!=='all')filterIdeas('all');else renderIdeas();}
 async function updateIdea(id,field,val){await sb.from('ideas').update({[field]:val}).eq('id',id);showSave();const r=ideasCache.find(x=>x.id===id);if(r)r[field]=val;if(field==='status')renderIdeas();}
 async function cycleStoplight(id){const r=ideasCache.find(x=>x.id===id);if(!r)return;const next=SL_CYCLE[(SL_CYCLE.indexOf(r.status)+1)%SL_CYCLE.length];await updateIdea(id,'status',next);}
 async function deleteIdea(id){await sb.from('ideas').delete().eq('id',id);await loadIdeas();renderIdeas();}
 function openPromote(id){const idea=ideasCache.find(x=>x.id===id);if(!idea)return;if(!idea.text.trim()){alert('Add some text to the idea first.');return;}document.getElementById('promote-idea-text').textContent=idea.text;document.getElementById('promote-idx').value=id;document.getElementById('promote-owner').value=idea.who==='Cynthia'?'Cynthia':'Shavonne';populateAreaDropdowns();openModal('modal-promote');}
 async function confirmPromote(){const id=document.getElementById('promote-idx').value;const areaKey=document.getElementById('promote-area').value;const owner=document.getElementById('promote-owner').value;const idea=ideasCache.find(x=>x.id===id);if(!idea)return;const saved=await addTaskDB({area:areaKey,task:idea.text.trim(),owner,due:'',status:'Not Started',notes:`Promoted from Ideas Parking Lot on ${idea.added_date}`});if(saved){await loadTasks();updateStats();renderTasks();}await updateIdea(id,'status','yes');closeModal('modal-promote');}
+let ideaFilter='all';
+function filterIdeas(f){ideaFilter=f;document.querySelectorAll('#idea-filters .filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderIdeas();}
+async function toggleMemberIdea(id){const r=ideasCache.find(x=>x.id===id);if(!r)return;await updateIdea(id,'member_idea',!r.member_idea);renderIdeas();}
 function renderIdeas(){
   const el=document.getElementById('ideas-container');if(!el)return;
+  const list=ideaFilter==='member'?ideasCache.filter(i=>i.member_idea):ideasCache;
+  if(ideaFilter==='member'&&!list.length){el.innerHTML=`<div style="text-align:center;padding:40px 20px;color:var(--muted);font-size:0.88rem;">No Member Ideas yet. Tag an idea with the Member Idea button to see it here.</div>`;return;}
   if(!ideasCache.length){el.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--muted);"><div style="font-size:2.5rem;margin-bottom:12px;">💡</div><p style="font-size:0.95rem;font-weight:600;color:var(--espresso);">No ideas yet</p><p style="font-size:0.84rem;margin-top:6px;">Hit "+ New Idea" to park your first one.</p></div>`;return;}
-  el.innerHTML=ideasCache.map(idea=>{
+  el.innerHTML=list.map(idea=>{
     const sl=SL_CFG[idea.status]||SL_CFG.new;
+    const mi=!!idea.member_idea;
     return `<div class="idea-card">
       <div class="idea-meta">
         <select onchange="updateIdea('${idea.id}','who',this.value)" style="border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);background:var(--cream);font-family:inherit;cursor:pointer;"><option ${idea.who==='Shavonne'?'selected':''}>Shavonne</option><option ${idea.who==='Cynthia'?'selected':''}>Cynthia</option></select>
+        <button onclick="toggleMemberIdea('${idea.id}')" title="${mi?'Remove Member Idea tag':'Tag as a Member Idea'}" style="border:1px solid ${mi?'var(--espresso)':'var(--border)'};border-radius:999px;padding:3px 10px;font-size:0.72rem;font-weight:700;letter-spacing:0.5px;background:${mi?'var(--espresso)':'transparent'};color:${mi?'var(--cream)':'var(--muted)'};font-family:inherit;cursor:pointer;">${mi?'✓ Member Idea':'+ Member Idea'}</button>
         <span class="idea-date">${idea.added_date}</span>
         <button class="stoplight-btn ${sl.cls}" onclick="cycleStoplight('${idea.id}')">${sl.label}</button>
         ${idea.status==='yes'?`<button class="promote-btn" onclick="openPromote('${idea.id}')">→ Promote to Action Items</button>`:''}
         <button onclick="deleteIdea('${idea.id}')" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;">✕</button>
       </div>
-      <textarea class="idea-text-input" placeholder="What's the idea or question…" onchange="updateIdea('${idea.id}','text',this.value)">${idea.text||''}</textarea>
+      <textarea class="idea-text-input" data-links placeholder="What's the idea or question…" onchange="updateIdea('${idea.id}','text',this.value)">${idea.text||''}</textarea>
     </div>`;
   }).join('');
 }
 
 // ══ CHANGELOG ═══════════════════════════════════════════
 const CHANGELOG=[
+  {date:'October 2026',entries:[
+    'Live updates restored — changes from either founder appear without refreshing',
+    'Edits in progress are protected — live updates wait until you click out of a field',
+    'Dashboard catches up automatically when you return to the tab after time away',
+    'Fixed PIN screen appearing on every refresh',
+    'Meeting Notes box doubled in height',
+    'Action item owner filter: "All" renamed to "Both"; Both-tagged items also show under SM and CW',
+    'Action item owner dropdown now includes Both',
+    'Each weekly meeting card links to the members\' meeting Google Doc',
+    'Quick Links calendar opens the Black Editors Content Calendar',
+    'Ideas Parking Lot: Member Idea tag and a Member Ideas filter',
+    'Pasted web links are clickable throughout the Weekly Meetings tab (notes, past to-dos, action items), the next-week agenda, and the Ideas Parking Lot',
+  ]},
   {date:'July 2025',entries:[
     'Added Meeting Attendance tracker to Community Growth tab',
     'Meeting date field added to Weekly Meetings — defaults to Saturday, editable',
@@ -1046,6 +1084,145 @@ function renderChangelog(){
     </div>`).join('');
 }
 
+// ══ CLICKABLE LINKS ═════════════════════════════════════
+// Any field marked data-links shows pasted http/https URLs as clickable links
+// when you're not editing it. Click anywhere in the field except a link to edit.
+// Text is escaped first, so only web addresses become links; nothing typed can run as code.
+// To add links to another field, add data-links to its <input> or <textarea>.
+const LINK_TEST=/https?:\/\/\S/i;
+function escHTML(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function linkify(text){
+  const t=String(text||'');let out='',last=0;
+  t.replace(/https?:\/\/[^\s<>"']+/gi,(m,offset)=>{
+    const trail=(m.match(/[.,;:!?)\]]+$/)||[''])[0];
+    const url=m.slice(0,m.length-trail.length);
+    out+=escHTML(t.slice(last,offset))+`<a href="${escHTML(url)}" target="_blank" rel="noopener noreferrer">${escHTML(url)}</a>`+escHTML(trail);
+    last=offset+m.length;return m;
+  });
+  return out+escHTML(t.slice(last));
+}
+function attachLinkView(el){
+  if(el.dataset.linksReady)return;el.dataset.linksReady='1';
+  const isArea=el.tagName==='TEXTAREA';
+  const view=document.createElement('div');
+  view.className=el.className+' link-view';
+  view.style.cssText=el.style.cssText;
+  if(isArea)view.style.overflow='auto';
+  view.tabIndex=0;
+  el.insertAdjacentElement('afterend',view);
+  const showEdit=()=>{
+    if(isArea&&view.offsetHeight)el.style.height=view.offsetHeight+'px';
+    view.style.display='none';el.style.display='';el.focus();
+    const n=el.value.length;try{el.setSelectionRange(n,n);}catch(e){}
+  };
+  const refresh=()=>{
+    if(document.activeElement===el)return;
+    if(LINK_TEST.test(el.value)){
+      if(isArea&&el.offsetHeight)view.style.height=el.offsetHeight+'px';
+      view.innerHTML=linkify(el.value);view.style.display='';el.style.display='none';
+    }else{view.style.display='none';el.style.display='';}
+  };
+  view.addEventListener('focus',showEdit);
+  el.addEventListener('blur',refresh);
+  el._linkRefresh=refresh;
+  refresh();
+}
+function enhanceLinks(){document.querySelectorAll('[data-links]:not([data-links-ready])').forEach(attachLinkView);}
+new MutationObserver(enhanceLinks).observe(document.body,{childList:true,subtree:true});
+
+// ══ LIVE SYNC ═══════════════════════════════════════════
+// Pushes changes made by either founder to every open copy of the dashboard.
+// Typing protection: if you're editing inside a section when an update arrives,
+// that section waits to redraw until you click out of it.
+// Status messages appear in the browser console as "[BEC live sync] ...".
+let renderedWeekKeys=[];
+const _pendingRenders={};
+const _syncTimers={};
+function _isEditingIn(el){const a=document.activeElement;return !!(el&&a&&a!==document.body&&el.contains(a));}
+function safeRender(name,getEl,fn){
+  if(_isEditingIn(getEl())){_pendingRenders[name]={getEl,fn};return;}
+  delete _pendingRenders[name];fn();
+}
+document.addEventListener('focusout',()=>setTimeout(()=>{
+  for(const[name,p]of Object.entries(_pendingRenders)){
+    if(!_isEditingIn(p.getEl())){delete _pendingRenders[name];p.fn();}
+  }
+},50));
+function setFieldIfIdle(el,val){if(el&&document.activeElement!==el){el.value=val;if(el._linkRefresh)el._linkRefresh();}}
+
+const SYNC={
+  async areas(){await loadAreas();safeRender('areas',()=>document.getElementById('tab-actions'),()=>{rebuildAreaFilters();filterArea(taskAreaFilter);renderDashAreas();if(document.getElementById('modal-areas')?.classList.contains('open'))renderAreaManager();});},
+  async tasks(){await loadTasks();safeRender('tasks',()=>document.getElementById('tasks-body'),()=>{renderTasks();updateStats();});},
+  async growth(){await loadGrowth();safeRender('growth',()=>document.getElementById('growth-body'),()=>renderGrowth());},
+  async meeting_attendance(){await loadAttendance();safeRender('attendance',()=>document.getElementById('attendance-body'),()=>renderAttendance());},
+  async content_calendar(){await loadCal();safeRender('cal',()=>document.getElementById('cal-body'),()=>renderCal());},
+  async newsletters(){await loadNL();safeRender('nl',()=>document.getElementById('newsletter-grid'),()=>renderNewsletters());},
+  async ideas(){await loadIdeas();safeRender('ideas',()=>document.getElementById('ideas-container'),()=>renderIdeas());},
+  async meetings(keys){
+    for(const k of keys){
+      const m=await getMeeting(k);if(!m)continue;
+      setFieldIfIdle(document.getElementById('no-'+k),m.notes||'');
+      setFieldIfIdle(document.getElementById('md-'+k),m.actual_date||k);
+    }
+    safeRender('dash-meeting',()=>document.getElementById('dash-meeting-preview'),()=>renderDashMeeting());
+  },
+  async meeting_actions(keys){
+    for(const k of keys){const acts=await getMeetingActions(k);safeRender('al-'+k,()=>document.getElementById('al-'+k),()=>renderAL(k,acts));}
+    safeRender('dash-meeting',()=>document.getElementById('dash-meeting-preview'),()=>renderDashMeeting());
+  },
+  async meeting_past_todos(keys){
+    for(const k of keys){const todos=await getMeetingPastTodos(k);safeRender('ptl-'+k,()=>document.getElementById('ptl-'+k),()=>renderPastTodos(k,todos));}
+  },
+};
+const WEEK_TABLES=['meetings','meeting_actions','meeting_past_todos'];
+const _syncKeys={};
+// Batches bursts of changes so each section refreshes once.
+function queueSync(table,weekKey){
+  if(WEEK_TABLES.includes(table)){
+    _syncKeys[table]=_syncKeys[table]||new Set();
+    // Deletes don't report which week they came from, so refresh every week on screen.
+    if(weekKey)_syncKeys[table].add(weekKey);else renderedWeekKeys.forEach(k=>_syncKeys[table].add(k));
+  }
+  clearTimeout(_syncTimers[table]);
+  _syncTimers[table]=setTimeout(async()=>{
+    try{
+      if(WEEK_TABLES.includes(table)){
+        const keys=[..._syncKeys[table]||[]];_syncKeys[table]=new Set();
+        const sun=toLocalDateStr(sunday(new Date()));
+        const next=nextWeekKey(sun);
+        const onScreen=keys.filter(k=>renderedWeekKeys.includes(k)||k===sun||k===next);
+        if(onScreen.length)await SYNC[table](onScreen);
+      }else{await SYNC[table]();}
+    }catch(e){console.warn('[BEC live sync] refresh failed for',table,e);}
+  },300);
+}
+let liveChannel=null;
+function startLiveSync(){
+  if(liveChannel){sb.removeChannel(liveChannel);liveChannel=null;}
+  let ch=sb.channel('bec-live');
+  Object.keys(SYNC).forEach(table=>{
+    ch=ch.on('postgres_changes',{event:'*',schema:'public',table},payload=>{
+      const row=payload.new&&Object.keys(payload.new).length?payload.new:payload.old;
+      queueSync(table,row?.week_key);
+    });
+  });
+  liveChannel=ch.subscribe(status=>{
+    console.log('[BEC live sync]',status);
+    if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){setTimeout(startLiveSync,5000);}
+  });
+}
+// Coming back to the tab: catch up on anything missed while the browser had it asleep.
+let _hiddenAt=null;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){_hiddenAt=Date.now();return;}
+  if(_hiddenAt&&Date.now()-_hiddenAt>15000){
+    console.log('[BEC live sync] tab returned — refreshing data');
+    Object.keys(SYNC).forEach(t=>queueSync(t,null));
+    if(!liveChannel||liveChannel.state!=='joined')startLiveSync();
+  }
+  _hiddenAt=null;
+});
+
 // ══ INIT ════════════════════════════════════════════════
 async function init(){
   document.getElementById('tasks-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted);">Loading…</td></tr>';
@@ -1054,6 +1231,7 @@ async function init(){
   await renderDashMeeting();
   await buildMeetings();
   renderGrowth();renderCal();renderNewsletters();renderIdeas();renderAttendance();renderChangelog();
+  startLiveSync();
 }
 init();
 </script>
