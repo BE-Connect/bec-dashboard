@@ -1040,6 +1040,7 @@ const CHANGELOG=[
     'Each weekly meeting card links to the members\' meeting Google Doc',
     'Quick Links calendar opens the Black Editors Content Calendar',
     'Ideas Parking Lot: Member Idea tag and a Member Ideas filter',
+    'Link a word: highlight it and click 🔗 or press Cmd/Ctrl+K while editing',
     'Pasted web links are clickable throughout the Weekly Meetings tab (notes, past to-dos, action items), the next-week agenda, and the Ideas Parking Lot',
   ]},
   {date:'July 2025',entries:[
@@ -1093,10 +1094,16 @@ const LINK_TEST=/https?:\/\/\S/i;
 function escHTML(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function linkify(text){
   const t=String(text||'');let out='',last=0;
-  t.replace(/https?:\/\/[^\s<>"']+/gi,(m,offset)=>{
-    const trail=(m.match(/[.,;:!?)\]]+$/)||[''])[0];
-    const url=m.slice(0,m.length-trail.length);
-    out+=escHTML(t.slice(last,offset))+`<a href="${escHTML(url)}" target="_blank" rel="noopener noreferrer">${escHTML(url)}</a>`+escHTML(trail);
+  const a=(url,label)=>`<a href="${escHTML(url)}" target="_blank" rel="noopener noreferrer">${escHTML(label)}</a>`;
+  // [word](https://...) shows as the word linked; a bare https://... shows as the address linked.
+  t.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|https?:\/\/[^\s<>"']+/gi,(m,label,mdUrl,offset)=>{
+    out+=escHTML(t.slice(last,offset));
+    if(label){out+=a(mdUrl,label);}
+    else{
+      const trail=(m.match(/[.,;:!?)\]]+$/)||[''])[0];
+      const url=m.slice(0,m.length-trail.length);
+      out+=a(url,url)+escHTML(trail);
+    }
     last=offset+m.length;return m;
   });
   return out+escHTML(t.slice(last));
@@ -1116,7 +1123,7 @@ function attachLinkView(el){
     const n=el.value.length;try{el.setSelectionRange(n,n);}catch(e){}
   };
   const refresh=()=>{
-    if(document.activeElement===el)return;
+    if(document.activeElement===el||el._linking)return;
     if(LINK_TEST.test(el.value)){
       if(isArea&&el.offsetHeight)view.style.height=el.offsetHeight+'px';
       view.innerHTML=linkify(el.value);view.style.display='';el.style.display='none';
@@ -1128,6 +1135,49 @@ function attachLinkView(el){
   refresh();
 }
 function enhanceLinks(){document.querySelectorAll('[data-links]:not([data-links-ready])').forEach(attachLinkView);}
+
+// Link button: appears at the top-right corner of a data-links field while you're editing it.
+// Highlight a word and click it (or press Cmd/Ctrl+K) to link that word; with nothing
+// highlighted it asks for the link text too. Saved as [word](url), shown as the word.
+const linkBtn=document.createElement('button');
+linkBtn.type='button';linkBtn.textContent='🔗';linkBtn.title='Add link (Cmd/Ctrl+K)';
+linkBtn.style.cssText='position:fixed;display:none;z-index:9000;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,0.15);cursor:pointer;font-size:0.8rem;line-height:1;padding:0;';
+document.body.appendChild(linkBtn);
+let linkTarget=null;
+function placeLinkBtn(){
+  if(!linkTarget||linkTarget.style.display==='none'){linkBtn.style.display='none';return;}
+  const r=linkTarget.getBoundingClientRect();
+  linkBtn.style.top=(r.top-11)+'px';linkBtn.style.left=(r.right-22)+'px';linkBtn.style.display='block';
+}
+document.addEventListener('focusin',e=>{if(e.target.matches&&e.target.matches('[data-links]')){linkTarget=e.target;placeLinkBtn();}});
+document.addEventListener('focusout',e=>{if(e.target===linkTarget&&!linkTarget._linking){linkTarget=null;linkBtn.style.display='none';}});
+window.addEventListener('scroll',placeLinkBtn,true);
+window.addEventListener('resize',placeLinkBtn);
+linkBtn.addEventListener('mousedown',e=>e.preventDefault()); // keep the field focused
+linkBtn.addEventListener('click',()=>{if(linkTarget)addLinkTo(linkTarget);});
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'&&e.target.matches&&e.target.matches('[data-links]')){e.preventDefault();addLinkTo(e.target);}
+});
+function addLinkTo(el){
+  const s=el.selectionStart??el.value.length,en=el.selectionEnd??el.value.length;
+  let label=el.value.slice(s,en).trim();
+  el._linking=true;
+  try{
+    if(!label){label=(prompt('Link text (the word or words to show):')||'').trim();if(!label)return;}
+    let url=(prompt(`Web address for "${label}":`,'https://')||'').trim();
+    if(!url||url==='https://')return;
+    if(!/^https?:\/\//i.test(url))url='https://'+url;
+    const md=`[${label.replace(/[\[\]\n]/g,' ')}](${url.replace(/[\s)]/g,'')})`;
+    el.value=el.value.slice(0,s)+md+el.value.slice(en);
+    el.dispatchEvent(new Event('change')); // saves through the field's normal save
+    const pos=s+md.length;
+    el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}
+  }finally{
+    el._linking=false;
+    if(document.activeElement!==el&&el._linkRefresh)el._linkRefresh();
+    if(document.activeElement===el){linkTarget=el;placeLinkBtn();}
+  }
+}
 new MutationObserver(enhanceLinks).observe(document.body,{childList:true,subtree:true});
 
 // ══ LIVE SYNC ═══════════════════════════════════════════
